@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>割り勘計算アプリ</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+            background-color: #f0f0f0;
+            font-size: 14px;
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 4px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 10px);
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            margin-top: 20px;
+        }
+        .summary-table {
+            margin-bottom: 20px;
+        }
+        .settlement {
+            display: flex;
+            flex-direction: column;
+        }
+        .receive {
+            color: #4CAF50;
+        }
+        .pay {
+            color: #F44336;
+        }
+        .content-cell {
+            max-width: 100px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        @media (min-width: 768px) {
+            .content-cell {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>割り勘計算アプリ</h1>
+    <table id="billTable">
+        <thead>
+            <tr>
+                <th>名前</th>
+                <th>内容</th>
+                <th>仮払金</th>
+            </tr>
+        </thead>
+        <tbody id="billTableBody">
+        </tbody>
+    </table>
+    <button id="addRowBtn">＋ 行を追加</button>
+    <button id="calculateBtn">計算</button>
+    <div id="result"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableBody = document.getElementById('billTableBody');
+            const addRowBtn = document.getElementById('addRowBtn');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resultDiv = document.getElementById('result');
+
+            function addRow() {
+                const newRow = tableBody.insertRow();
+                newRow.innerHTML = `
+                    <td><input type="text" class="name"></td>
+                    <td><input type="text" class="description"></td>
+                    <td><input type="number" class="payment" min="0"></td>
+                `;
+            }
+
+            function formatNumber(number) {
+                return number.toLocaleString('ja-JP');
+            }
+
+            function calculate() {
+                const rows = tableBody.querySelectorAll('tr');
+                let total = 0;
+                let participants = [];
+
+                rows.forEach(row => {
+                    const name = row.querySelector('.name').value.trim();
+                    const description = row.querySelector('.description').value.trim();
+                    const payment = parseFloat(row.querySelector('.payment').value) || 0;
+                    if (name) {
+                        total += payment;
+                        participants.push({ name, description, payment });
+                    }
+                });
+
+                if (participants.length === 0) {
+                    resultDiv.innerHTML = '<p>有効な参加者がいません。</p>';
+                    return;
+                }
+
+                const average = Math.floor(total / participants.length);
+
+                let resultHTML = `
+                    <h2>計算結果</h2>
+                    <table class="summary-table">
+                        <tr>
+                            <th>合計</th>
+                            <th>平均</th>
+                        </tr>
+                        <tr>
+                            <td>${formatNumber(total)}</td>
+                            <td>${formatNumber(average)}</td>
+                        </tr>
+                    </table>
+                    <h3>精算内容</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>名前</th>
+                                <th>内容</th>
+                                <th>仮払金</th>
+                                <th>精算金額</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                participants.forEach(participant => {
+                    const balance = participant.payment - average;
+                    resultHTML += `
+                        <tr>
+                            <td>${participant.name}</td>
+                            <td class="content-cell">${participant.description || '-'}</td>
+                            <td>${formatNumber(participant.payment)}</td>
+                            <td>
+                                <div class="settlement">
+                    `;
+                    if (balance > 0) {
+                        resultHTML += `<span class="receive">受け取る</span><span class="receive">${formatNumber(balance)}</span>`;
+                    } else if (balance < 0) {
+                        resultHTML += `<span class="pay">払う</span><span class="pay">${formatNumber(Math.abs(balance))}</span>`;
+                    } else {
+                        resultHTML += '<span>精算不要</span>';
+                    }
+                    resultHTML += `
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                resultHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                resultDiv.innerHTML = resultHTML;
+            }
+
+            addRowBtn.addEventListener('click', addRow);
+            calculateBtn.addEventListener('click', calculate);
+
+            // 初期行を2つ追加
+            addRow();
+            addRow();
+        });
+    </script>
+</body>
+</html>
