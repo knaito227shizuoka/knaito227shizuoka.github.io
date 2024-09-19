@@ -3,212 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>割り勘計算アプリ</title>
+    <title>株式会社サンプル - コーポレートサイト</title>
     <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --text-color: #333;
+            --background-color: #f9f9f9;
+            --card-background: #ffffff;
+        }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 10px;
-            background-color: #f0f0f0;
-            font-size: 14px;
-        }
-        h1, h2, h3 {
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px 4px;
-            text-align: left;
-        }
-        th {
-            background-color: #f8f8f8;
-            font-weight: bold;
-        }
-        input[type="text"], input[type="number"] {
-            width: calc(100% - 10px);
-            padding: 4px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #result {
-            background-color: white;
-            padding: 10px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-            margin-top: 20px;
-        }
-        .summary-table {
-            margin-bottom: 20px;
-        }
-        .settlement {
+            font-family: 'Noto Sans JP', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
-        .receive {
-            color: #4CAF50;
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: auto;
+            padding: 0 20px;
         }
-        .pay {
-            color: #F44336;
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1000;
         }
-        .content-cell {
-            max-width: 100px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        @media (min-width: 768px) {
-            .content-cell {
-                max-width: 200px;
+
+        .company-name {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        nav {
+            background: var(--card-background);
+            padding: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            padding: 0;
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            flex-grow: 1;
+        }
+
+        .main-content section {
+            flex-basis: 100%;
+            max-width: 800px;
+            background-color: var(--card-background);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .main-content section:hover {
+            transform: translateY(-5px);
+        }
+
+        .main-content h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .image-section {
+            text-align: center;
+        }
+
+        .image-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: auto;
+        }
+
+        #menu-toggle {
+            display: none;
+        }
+
+        .menu-button-container {
+            display: none;
+            height: 100%;
+            width: 50px;
+            cursor: pointer;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .menu-button,
+        .menu-button::before,
+        .menu-button::after {
+            display: block;
+            background-color: #fff;
+            position: absolute;
+            height: 4px;
+            width: 30px;
+            transition: transform 400ms cubic-bezier(0.23, 1, 0.32, 1);
+            border-radius: 2px;
+        }
+
+        .menu-button::before {
+            content: '';
+            margin-top: -8px;
+        }
+
+        .menu-button::after {
+            content: '';
+            margin-top: 8px;
+        }
+
+        #menu-toggle:checked + .menu-button-container .menu-button::before {
+            margin-top: 0px;
+            transform: rotate(405deg);
+        }
+
+        #menu-toggle:checked + .menu-button-container .menu-button {
+            background: rgba(255, 255, 255, 0);
+        }
+
+        #menu-toggle:checked + .menu-button-container .menu-button::after {
+            margin-top: 0px;
+            transform: rotate(-405deg);
+        }
+
+        @media (max-width: 767px) {
+            .menu-button-container {
+                display: flex;
+                padding: 15px;
+                margin: -15px;
+            }
+
+            nav {
+                position: absolute;
+                top: 0;
+                margin-top: 70px;
+                left: 0;
+                flex-direction: column;
+                width: 100%;
+                justify-content: center;
+                align-items: center;
+                padding: 0;
+                background: rgba(0, 0, 0, 0.9);
+                transition: opacity 0.8s ease, visibility 0.8s ease;
+                visibility: hidden;
+                opacity: 0;
+            }
+
+            #menu-toggle:checked ~ nav {
+                visibility: visible;
+                opacity: 1;
+            }
+
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+            }
+
+            nav ul li {
+                margin: 20px 0;
+                opacity: 0;
+                transition: opacity 0.5s ease, transform 0.5s ease;
+                transform: translateY(20px);
+            }
+
+            #menu-toggle:checked ~ nav ul li {
+                opacity: 1;
+                transform: translateY(0);
+                transition-delay: 0.3s;
+            }
+
+            nav ul li a {
+                color: white;
+                font-size: 1.5em;
+            }
+
+            .main-content section {
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <h1>割り勘計算アプリ</h1>
-    <table id="billTable">
-        <thead>
-            <tr>
-                <th>名前</th>
-                <th>内容</th>
-                <th>仮払金</th>
-            </tr>
-        </thead>
-        <tbody id="billTableBody">
-        </tbody>
-    </table>
-    <button id="addRowBtn">＋ 行を追加</button>
-    <button id="calculateBtn">計算</button>
-    <div id="result"></div>
+    <header>
+        <div class="container header-content">
+            <h1 class="company-name">株式会社サンプル</h1>
+            <input id="menu-toggle" type="checkbox" />
+            <label class='menu-button-container' for="menu-toggle">
+                <div class='menu-button'></div>
+            </label>
+            <nav>
+                <ul>
+                    <li><a href="#home">ホーム</a></li>
+                    <li><a href="#about">会社概要</a></li>
+                    <li><a href="#services">サービス</a></li>
+                    <li><a href="#image">イメージ</a></li>
+                    <li><a href="#contact">お問い合わせ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tableBody = document.getElementById('billTableBody');
-            const addRowBtn = document.getElementById('addRowBtn');
-            const calculateBtn = document.getElementById('calculateBtn');
-            const resultDiv = document.getElementById('result');
+    <div class="container main-content">
+        <section id="home">
+            <h2>ようこそ</h2>
+            <p>株式会社サンプルは、革新的なソリューションを提供する企業です。私たちは、お客様のニーズに合わせた最適なサービスを提供し、ビジネスの成功をサポートします。</p>
+        </section>
 
-            function addRow() {
-                const newRow = tableBody.insertRow();
-                newRow.innerHTML = `
-                    <td><input type="text" class="name"></td>
-                    <td><input type="text" class="description"></td>
-                    <td><input type="number" class="payment" min="0"></td>
-                `;
-            }
+        <section id="about">
+            <h2>会社概要</h2>
+            <p>2010年の設立以来、私たちは顧客満足度を最優先に考え、事業を展開しています。経験豊富な専門家チームが、最新の技術とトレンドを活用し、クライアントの課題解決に取り組んでいます。</p>
+        </section>
 
-            function formatNumber(number) {
-                return number.toLocaleString('ja-JP');
-            }
+        <section id="services">
+            <h2>サービス</h2>
+            <ul>
+                <li>ITコンサルティング: ビジネス戦略と技術の融合</li>
+                <li>ソフトウェア開発: カスタムソリューションの設計と実装</li>
+                <li>クラウドソリューション: スケーラブルで安全なインフラストラクチャ</li>
+                <li>データ分析: インサイトを活用した意思決定支援</li>
+            </ul>
+        </section>
 
-            function calculate() {
-                const rows = tableBody.querySelectorAll('tr');
-                let total = 0;
-                let participants = [];
+        <section id="image" class="image-section">
+            <h2>イメージ</h2>
+            <img src="https://knaito227shizuoka.github.io/kazoku.png" alt="家族の絵" />
+            <p>私たちは、家族のような絆で結ばれたチームで、お客様のニーズに応えます。</p>
+        </section>
 
-                rows.forEach(row => {
-                    const name = row.querySelector('.name').value.trim();
-                    const description = row.querySelector('.description').value.trim();
-                    const payment = parseFloat(row.querySelector('.payment').value) || 0;
-                    if (name) {
-                        total += payment;
-                        participants.push({ name, description, payment });
-                    }
-                });
+        <section id="contact">
+            <h2>お問い合わせ</h2>
+            <p>サービスについてのご質問や、お見積りのご依頼は以下の連絡先までお願いいたします：</p>
+            <p>メール: info@sample-company.com</p>
+            <p>電話: 03-1234-5678</p>
+            <p>所在地: 〒100-0001 東京都千代田区千代田1-1-1 サンプルビル5F</p>
+        </section>
+    </div>
 
-                if (participants.length === 0) {
-                    resultDiv.innerHTML = '<p>有効な参加者がいません。</p>';
-                    return;
-                }
-
-                const average = Math.floor(total / participants.length);
-
-                let resultHTML = `
-                    <h2>計算結果</h2>
-                    <table class="summary-table">
-                        <tr>
-                            <th>合計</th>
-                            <th>平均</th>
-                        </tr>
-                        <tr>
-                            <td>${formatNumber(total)}</td>
-                            <td>${formatNumber(average)}</td>
-                        </tr>
-                    </table>
-                    <h3>精算内容</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>名前</th>
-                                <th>内容</th>
-                                <th>仮払金</th>
-                                <th>精算金額</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                participants.forEach(participant => {
-                    const balance = participant.payment - average;
-                    resultHTML += `
-                        <tr>
-                            <td>${participant.name}</td>
-                            <td class="content-cell">${participant.description || '-'}</td>
-                            <td>${formatNumber(participant.payment)}</td>
-                            <td>
-                                <div class="settlement">
-                    `;
-                    if (balance > 0) {
-                        resultHTML += `<span class="receive">受け取る</span><span class="receive">${formatNumber(balance)}</span>`;
-                    } else if (balance < 0) {
-                        resultHTML += `<span class="pay">払う</span><span class="pay">${formatNumber(Math.abs(balance))}</span>`;
-                    } else {
-                        resultHTML += '<span>精算不要</span>';
-                    }
-                    resultHTML += `
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                resultHTML += `
-                        </tbody>
-                    </table>
-                `;
-
-                resultDiv.innerHTML = resultHTML;
-            }
-
-            addRowBtn.addEventListener('click', addRow);
-            calculateBtn.addEventListener('click', calculate);
-
-            // 初期行を2つ追加
-            addRow();
-            addRow();
-        });
-    </script>
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 株式会社サンプル. All rights reserved.</p>
+        </div>
+    </footer>
 </body>
 </html>
