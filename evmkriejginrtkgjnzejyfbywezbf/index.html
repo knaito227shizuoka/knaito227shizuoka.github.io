@@ -83,32 +83,31 @@
             padding: 8px 16px;
         }
 
-        .family-content {
-            flex: 1;
+        .family-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0;
         }
 
-        .family-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        .family-row:last-child {
+            margin-bottom: 0;
         }
+
 
         .family-list {
             margin-bottom: 20px;
         }
 
         .family-item {
-            background: #f8f9fa;
+            background: #ffffff;
             border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #e9ecef;
-            border-left: 5px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #d0d7de;
+            border-left: 6px solid #667eea;
             transition: all 0.3s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
 
@@ -120,8 +119,8 @@
         }
 
         .family-info {
-            color: #666;
-            font-size: 14px;
+            color: #333;
+            font-size: 16px;
             line-height: 1.5;
         }
 
@@ -244,16 +243,16 @@
                         「新規登録」ボタンから追加してください
                     </div>
                     <div v-for="family in sortedFamilyList" :key="family.name" class="family-item">
-                        <div class="family-content">
+                        <div class="family-row">
                             <div class="family-name">{{ family.displayName }}</div>
-                            <div class="family-info">
-                                {{ family.birthday }} ({{ family.age }}歳)
-                            </div>
                             <div class="birthday-countdown" :class="{ today: family.isToday }">
                                 {{ family.countdownText }}
                             </div>
                         </div>
-                        <div class="family-actions">
+                        <div class="family-row">
+                            <div class="family-info">
+                                {{ family.birthday }} ({{ family.age }}歳)
+                            </div>
                             <button class="btn btn-danger" @click="deleteFamily(family.name)">削除</button>
                         </div>
                     </div>
