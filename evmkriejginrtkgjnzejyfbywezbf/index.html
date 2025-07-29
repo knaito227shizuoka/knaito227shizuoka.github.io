@@ -79,8 +79,8 @@
 
         .btn-danger {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            font-size: 14px;
-            padding: 8px 16px;
+            font-size: 16px;
+            padding: 6px 12px;
         }
 
         .family-row {
@@ -213,6 +213,17 @@
             padding: 40px 20px;
         }
 
+        .zodiac-sign {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px 4px 9px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 0 4px 0 3px;
+        }
+
         .error-message {
             color: #e74c3c;
             font-size: 14px;
@@ -251,7 +262,7 @@
                         </div>
                         <div class="family-row">
                             <div class="family-info">
-                                {{ family.birthday }} ({{ family.age }}歳)
+                                {{ family.birthday }} <span class="zodiac-sign">{{ family.zodiacSign }}</span> {{ family.age }}歳
                             </div>
                             <button class="btn btn-danger" @click="deleteFamily(family.name)">削除</button>
                         </div>
@@ -356,7 +367,8 @@
                         daysUntil: this.daysUntilBirthday(data.birthday),
                         isToday: this.daysUntilBirthday(data.birthday) === 0,
                         countdownText: this.getCountdownText(this.daysUntilBirthday(data.birthday)),
-                        displayName: this.calculateGrade(data.birthday) ? `${name} (${this.calculateGrade(data.birthday)})` : name
+                        displayName: this.calculateGrade(data.birthday) ? `${name} (${this.calculateGrade(data.birthday)})` : name,
+                        zodiacSign: this.getZodiacSign(data.birthday)
                     }));
                 },
                 sortedFamilyList() {
@@ -491,6 +503,12 @@
                     } else {
                         return `誕生日まで ${daysUntil} 日`;
                     }
+                },
+                getZodiacSign(birthday) {
+                    const birthDate = new Date(birthday);
+                    const year = birthDate.getFullYear();
+                    const zodiacs = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+                    return zodiacs[(year - 4) % 12];
                 },
                 registerFamily() {
                     this.clearErrors();
