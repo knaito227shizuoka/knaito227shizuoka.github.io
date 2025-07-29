@@ -86,6 +86,23 @@
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
 
+        .btn-share {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn-share:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3);
+        }
+
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -289,7 +306,10 @@
             <div v-if="currentScreen === 'list'" class="screen active">
                 <div class="header-row">
                     <h2 class="header-title">🎂 誕生日記録簿</h2>
-                    <button class="btn-compact" @click="showRegisterScreen">新規登録</button>
+                    <div>
+                        <button class="btn-share" @click="shareUrl">共有</button>
+                        <button class="btn-compact" @click="showRegisterScreen">新規登録</button>
+                    </div>
                 </div>
                 <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
                 <div class="family-list">
@@ -611,6 +631,14 @@
                         this.saveFamilyData(); // localStorageに保存
                         this.showSuccessMessage(`${name}さんを削除しました`);
                     }
+                },
+                shareUrl() {
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    navigator.clipboard.writeText(baseUrl).then(() => {
+                        this.showSuccessMessage('URLをクリップボードにコピーしました');
+                    }).catch(() => {
+                        this.showSuccessMessage('URLのコピーに失敗しました');
+                    });
                 }
             }
         });
@@ -621,11 +649,6 @@
         vueInstance.parseUrlParams();
         if (Object.keys(vueInstance.familyData).length === 0) {
             vueInstance.loadFamilyData();
-        }
-        
-        // URLパラメータを削除
-        if (window.location.search) {
-            window.history.replaceState({}, document.title, window.location.pathname);
         }
     </script>
 </body>
