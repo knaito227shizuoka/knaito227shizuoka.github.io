@@ -53,7 +53,37 @@
             text-align: center;
             color: #333;
             margin-bottom: 30px;
-            font-size: 24px;
+            font-size: 20px;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-title {
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .btn-compact {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-compact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
 
         .btn {
@@ -239,6 +269,17 @@
             margin-bottom: 20px;
             display: none;
         }
+
+        .privacy-notice {
+            background: #f8f9fa;
+            color: #6c757d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 4px solid #667eea;
+        }
     </style>
 </head>
 <body>
@@ -246,11 +287,14 @@
         <div class="container">
             <!-- 一覧画面 -->
             <div v-if="currentScreen === 'list'" class="screen active">
-                <h1>🎂 誕生日記録簿</h1>
+                <div class="header-row">
+                    <h2 class="header-title">🎂 誕生日記録簿</h2>
+                    <button class="btn-compact" @click="showRegisterScreen">新規登録</button>
+                </div>
                 <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
                 <div class="family-list">
                     <div v-if="familyList.length === 0" class="empty-state">
-                        まだ家族が登録されていません<br>
+                        まだ情報が登録されていません<br>
                         「新規登録」ボタンから追加してください
                     </div>
                     <div v-for="family in sortedFamilyList" :key="family.name" class="family-item">
@@ -275,7 +319,10 @@
 
             <!-- 登録画面 -->
             <div v-if="currentScreen === 'register'" class="screen active">
-                <h1>👨‍👩‍👧‍👦 家族登録</h1>
+                <h1>👨‍👩‍👧‍👦 情報登録</h1>
+                <div class="privacy-notice">
+                    📱 登録した情報はこのスマートフォンの中に保存されます。サーバーには保存されません。他のユーザーにも共有されません。
+                </div>
                 <div>
                     <div class="form-group">
                         <label for="name">名前</label>
@@ -574,6 +621,11 @@
         vueInstance.parseUrlParams();
         if (Object.keys(vueInstance.familyData).length === 0) {
             vueInstance.loadFamilyData();
+        }
+        
+        // URLパラメータを削除
+        if (window.location.search) {
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
     </script>
 </body>
