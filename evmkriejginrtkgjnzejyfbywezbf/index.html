@@ -261,10 +261,11 @@
         }
 
         .zodiac-sign {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: white;
+            color: #333;
             padding: 4px 10px 4px 9px;
             border-radius: 12px;
+            border: 2px solid #667eea;
             font-size: 14px;
             font-weight: bold;
             display: inline-block;
@@ -305,7 +306,7 @@
             <!-- 一覧画面 -->
             <div v-if="currentScreen === 'list'" class="screen active">
                 <div class="header-row">
-                    <h2 class="header-title">🎂 誕生日記録簿</h2>
+                    <h2 class="header-title">🎂 誕生日</h2>
                     <div>
                         <button class="btn-share" @click="shareUrl">共有</button>
                         <button class="btn-compact" @click="showRegisterScreen">新規登録</button>
@@ -574,7 +575,7 @@
                 getZodiacSign(birthday) {
                     const birthDate = new Date(birthday);
                     const year = birthDate.getFullYear();
-                    const zodiacs = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+                    const zodiacs = ['🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑', '🐵', '🐓', '🐶', '🐗'];
                     return zodiacs[(year - 4) % 12];
                 },
                 registerFamily() {
@@ -635,9 +636,9 @@
                 shareUrl() {
                     const baseUrl = window.location.origin + window.location.pathname;
                     navigator.clipboard.writeText(baseUrl).then(() => {
-                        this.showSuccessMessage('URLをクリップボードにコピーしました');
+                        alert('クリップボードにコピーしました');
                     }).catch(() => {
-                        this.showSuccessMessage('URLのコピーに失敗しました');
+                        alert('URLのコピーに失敗しました');
                     });
                 }
             }
