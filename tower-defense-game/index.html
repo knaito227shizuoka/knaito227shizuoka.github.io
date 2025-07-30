@@ -229,7 +229,6 @@
             
             <div class="wave-info">
                 <div>ウェーブ {{ currentWave }} / {{ maxWaves }}</div>
-                <div v-if="waveInProgress">敵残り: {{ enemiesLeft }}</div>
             </div>
             
             <div class="towers">
@@ -258,7 +257,7 @@
             </div>
             
             <div class="controls">
-                <button class="btn" @click="startWave" :disabled="waveInProgress || gameOver">
+                <button class="btn" @click="startWave" :disabled="waveInProgress || gameOver" v-if="currentWave === 1 && !waveInProgress">
                     {{ waveInProgress ? 'ウェーブ進行中' : 'ウェーブ開始' }}
                 </button>
                 <button class="btn" @click="resetGame" v-if="gameOver">
@@ -278,6 +277,10 @@
             おめでとうございます！<br>
             全10ウェーブクリア！
         </div>
+        
+        <div v-if="showWaveToast" class="toast" style="background: linear-gradient(135deg, #4CAF50, #66BB6A, #81C784); border: 3px solid #4CAF50;">
+            {{ waveToastMessage }}
+        </div>
     </div>
 
     <script>
@@ -295,6 +298,8 @@
                     gameOver: false,
                     selectedTowerType: null,
                     showClearToast: false,
+                    showWaveToast: false,
+                    waveToastMessage: '',
                     
                     enemies: [],
                     towers: [],
@@ -364,6 +369,13 @@
                         if (this.currentWave >= this.maxWaves) {
                             this.gameOver = true;
                             this.showVictoryToast();
+                        } else if (this.currentWave > 1) {
+                            // ウェーブ1以降は自動で次のウェーブを開始
+                            setTimeout(() => {
+                                if (!this.gameOver) {
+                                    this.startWave();
+                                }
+                            }, 1000);
                         }
                     }
                     
@@ -584,7 +596,7 @@
                     
                     if (this.canPlaceTower(x, y)) {
                         this.placeTower(x, y, this.selectedTowerType);
-                        this.selectedTowerType = null;
+                        // placeTower内で選択状態の管理を行うため、ここでは何もしない
                     }
                 },
                 
@@ -626,6 +638,11 @@
                         });
                         
                         this.money -= towerType.cost;
+                        
+                        // お金に余裕があれば同じタワーを選択状態に保つ
+                        if (this.money < towerType.cost) {
+                            this.selectedTowerType = null;
+                        }
                     }
                 },
                 
@@ -634,6 +651,9 @@
                     
                     this.waveInProgress = true;
                     this.enemiesLeft = Math.max(3, 5 + (this.currentWave - 1) * 2);
+                    
+                    // ウェーブ開始のトーストメッセージを表示
+                    this.showWaveToastMessage();
                     
                     const spawnInterval = Math.max(100, 400 - this.currentWave * 25);
                     
@@ -691,6 +711,14 @@
                     setTimeout(() => {
                         this.showClearToast = false;
                     }, 4000);
+                },
+                
+                showWaveToastMessage() {
+                    this.waveToastMessage = `ウェーブ ${this.currentWave} 開始！`;
+                    this.showWaveToast = true;
+                    setTimeout(() => {
+                        this.showWaveToast = false;
+                    }, 2000);
                 }
             }
         }).mount('#app');
