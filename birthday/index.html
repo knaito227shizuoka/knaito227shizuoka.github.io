@@ -389,7 +389,7 @@
                         </div>
                         <div class="family-row">
                             <div class="family-info">
-                                {{ family.birthday }} <span class="zodiac-sign">{{ family.zodiacSign }}</span> {{ family.age }}歳
+                                {{ family.birthday }} <span class="zodiac-sign">{{ family.zodiacSign }}</span> {{ family.age }}歳 <span class="zodiac-sign">{{ family.constellationSign }}</span>
                             </div>
                             <button class="btn btn-danger" @click="deleteFamily(family.name)">削除</button>
                         </div>
@@ -511,7 +511,8 @@
                         isToday: this.daysUntilBirthday(data.birthday) === 0,
                         countdownText: this.getCountdownText(this.daysUntilBirthday(data.birthday)),
                         displayName: this.calculateGrade(data.birthday) ? `${name} (${this.calculateGrade(data.birthday)})` : name,
-                        zodiacSign: this.getZodiacSign(data.birthday)
+                        zodiacSign: this.getZodiacSign(data.birthday),
+                        constellationSign: this.getConstellationSign(data.birthday)
                     }));
                 },
                 sortedFamilyList() {
@@ -652,6 +653,26 @@
                     const year = birthDate.getFullYear();
                     const zodiacs = ['🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑', '🐵', '🐓', '🐶', '🐗'];
                     return zodiacs[(year - 4) % 12];
+                },
+                getConstellationSign(birthday) {
+                    const birthDate = new Date(birthday);
+                    const month = birthDate.getMonth() + 1;
+                    const day = birthDate.getDate();
+                    
+                    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return '♈';
+                    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return '♉';
+                    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return '♊';
+                    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return '♋';
+                    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return '♌';
+                    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return '♍';
+                    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return '♎';
+                    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return '♏';
+                    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return '♐';
+                    if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return '♑';
+                    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return '♒';
+                    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return '♓';
+                    
+                    return '';
                 },
                 registerFamily() {
                     this.clearErrors();
