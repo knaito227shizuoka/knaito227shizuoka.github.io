@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>誕生日記録簿</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px 15px;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header-title {
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .btn-compact {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-compact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-share {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn-share:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            font-size: 16px;
+            padding: 6px 12px;
+        }
+
+        .family-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0;
+        }
+
+        .family-row:last-child {
+            margin-bottom: 0;
+        }
+
+
+        .family-list {
+            margin-bottom: 20px;
+        }
+
+        .family-item {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #d0d7de;
+            border-left: 6px solid #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+
+        .family-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .family-info {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .birthday-countdown {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 8px;
+        }
+
+        .birthday-countdown.today {
+            color: #27ae60;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .move-buttons {
+            display: none;
+        }
+
+        .move-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .move-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .date-inputs > div {
+            flex: 1;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        .zodiac-sign {
+            font-size: 32px;
+            display: inline-block;
+            margin: 0 4px 0 3px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .privacy-notice {
+            background: #f8f9fa;
+            color: #6c757d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 4px solid #667eea;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn-share-app {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-share-app:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3);
+        }
+
+        .btn-share-data {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-share-data:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- 一覧画面 -->
+            <div v-if="currentScreen === 'list'" class="screen active">
+                <div class="header-row">
+                    <h2 class="header-title">🎂 誕生日</h2>
+                    <div>
+                        <button class="btn-share" @click="shareUrl">共有</button>
+                        <button class="btn-compact" @click="showRegisterScreen">新規登録</button>
+                    </div>
+                </div>
+                <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
+                <div class="family-list">
+                    <div v-if="familyList.length === 0" class="empty-state">
+                        まだ情報が登録されていません<br>
+                        「新規登録」ボタンから追加してください
+                    </div>
+                    <div v-for="family in sortedFamilyList" :key="family.name" class="family-item">
+                        <div class="family-row">
+                            <div class="family-name">{{ family.displayName }}</div>
+                            <div class="birthday-countdown" :class="{ today: family.isToday }">
+                                {{ family.countdownText }}
+                            </div>
+                        </div>
+                        <div class="family-row">
+                            <div class="family-info">
+                                {{ family.birthday }} <span class="zodiac-sign">{{ family.zodiacSign }}</span> {{ family.age }}歳
+                            </div>
+                            <button class="btn btn-danger" @click="deleteFamily(family.name)">削除</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn" @click="showRegisterScreen">新規登録</button>
+                </div>
+            </div>
+
+            <!-- 登録画面 -->
+            <div v-if="currentScreen === 'register'" class="screen active">
+                <h1>👨‍👩‍👧‍👦 情報登録</h1>
+                <div class="privacy-notice">
+                    📱 登録した情報はこのスマートフォンの中に保存されます。サーバーには保存されません。他のユーザーにも共有されません。
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label for="name">名前</label>
+                        <input type="text" v-model="form.name" required>
+                        <div v-if="errors.name" class="error-message" style="display: block;">{{ errors.name }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>生年月日</label>
+                        <div class="date-inputs">
+                            <div>
+                                <label for="year">年</label>
+                                <select v-model="form.year" required>
+                                    <option value="">選択してください</option>
+                                    <option v-for="year in availableYears" :key="year" :value="year">{{ year }}年</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="month">月</label>
+                                <select v-model="form.month" required>
+                                    <option value="">選択してください</option>
+                                    <option v-for="month in availableMonths" :key="month" :value="month">{{ month }}月</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="day">日</label>
+                                <select v-model="form.day" required>
+                                    <option value="">選択してください</option>
+                                    <option v-for="day in availableDays" :key="day" :value="day">{{ day }}日</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div v-if="errors.birthday" class="error-message" style="display: block;">{{ errors.birthday }}</div>
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="btn" @click="registerFamily">登録</button>
+                        <button type="button" class="btn btn-secondary" @click="showListScreen">戻る</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 共有モーダル -->
+        <div v-if="showShareModal" class="modal-overlay" @click="closeShareModal">
+            <div class="modal-content" @click.stop>
+                <h2 class="modal-title">共有オプション</h2>
+                <div class="modal-buttons">
+                    <button class="btn btn-share-app" @click="shareApp">このアプリを教える</button>
+                    <button class="btn btn-share-data" @click="shareData">登録したデータを共有</button>
+                    <button class="btn" @click="closeShareModal">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        const app = createApp({
+            data() {
+                return {
+                    currentScreen: 'list',
+                    successMessage: '',
+                    familyData: {},
+                    showShareModal: false,
+                    form: {
+                        name: '',
+                        year: '',
+                        month: '',
+                        day: ''
+                    },
+                    errors: {
+                        name: '',
+                        birthday: ''
+                    }
+                };
+            },
+            computed: {
+                availableYears() {
+                    const currentYear = new Date().getFullYear();
+                    const years = [];
+                    for (let year = currentYear; year >= currentYear - 100; year--) {
+                        years.push(year);
+                    }
+                    return years;
+                },
+                availableMonths() {
+                    return Array.from({ length: 12 }, (_, i) => i + 1);
+                },
+                availableDays() {
+                    if (!this.form.year || !this.form.month) {
+                        return Array.from({ length: 31 }, (_, i) => i + 1);
+                    }
+                    const daysInMonth = new Date(this.form.year, this.form.month, 0).getDate();
+                    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+                },
+                familyList() {
+                    return Object.entries(this.familyData).map(([name, data]) => ({
+                        name,
+                        birthday: data.birthday,
+                        age: this.calculateAge(data.birthday),
+                        grade: this.calculateGrade(data.birthday),
+                        daysUntil: this.daysUntilBirthday(data.birthday),
+                        isToday: this.daysUntilBirthday(data.birthday) === 0,
+                        countdownText: this.getCountdownText(this.daysUntilBirthday(data.birthday)),
+                        displayName: this.calculateGrade(data.birthday) ? `${name} (${this.calculateGrade(data.birthday)})` : name,
+                        zodiacSign: this.getZodiacSign(data.birthday)
+                    }));
+                },
+                sortedFamilyList() {
+                    return this.familyList.sort((a, b) => a.daysUntil - b.daysUntil);
+                }
+            },
+            methods: {
+                saveFamilyData() {
+                    localStorage.setItem('familyBirthdayData', JSON.stringify(this.familyData));
+                },
+                loadFamilyData() {
+                    const stored = localStorage.getItem('familyBirthdayData');
+                    if (stored) {
+                        try {
+                            this.familyData = JSON.parse(stored);
+                        } catch (e) {
+                            console.error('データの読み込みに失敗しました:', e);
+                        }
+                    }
+                },
+                parseUrlParams() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const familyParams = [];
+                    
+                    // name1, birthday1, name2, birthday2... の形式でパラメータを取得
+                    let i = 1;
+                    while (urlParams.has(`name${i}`) && urlParams.has(`birthday${i}`)) {
+                        const name = urlParams.get(`name${i}`);
+                        const birthday = urlParams.get(`birthday${i}`);
+                        if (name && birthday) {
+                            familyParams.push({ name, birthday });
+                        }
+                        i++;
+                    }
+                    
+                    // URLパラメータがある場合はそれを優先して設定
+                    if (familyParams.length > 0) {
+                        this.familyData = {};
+                        familyParams.forEach(({ name, birthday }) => {
+                            this.familyData[name] = { birthday };
+                        });
+                        this.saveFamilyData(); // URLパラメータのデータをlocalStorageに保存
+                    }
+                },
+                showListScreen() {
+                    this.currentScreen = 'list';
+                },
+                showRegisterScreen() {
+                    this.currentScreen = 'register';
+                    this.form.name = '';
+                    this.form.year = '';
+                    this.form.month = '';
+                    this.form.day = '';
+                    this.clearErrors();
+                },
+                clearErrors() {
+                    this.errors.name = '';
+                    this.errors.birthday = '';
+                },
+                showSuccessMessage(message) {
+                    this.successMessage = message;
+                    setTimeout(() => {
+                        this.successMessage = '';
+                    }, 3000);
+                },
+                calculateAge(birthday) {
+                    const today = new Date();
+                    const birthDate = new Date(birthday);
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
+                    
+                    return age;
+                },
+                calculateGrade(birthday) {
+                    const today = new Date();
+                    const birthDate = new Date(birthday);
+                    
+                    const currentYear = today.getFullYear();
+                    const april1st = new Date(currentYear, 3, 1);
+                    
+                    let schoolYear;
+                    if (today >= april1st) {
+                        schoolYear = currentYear;
+                    } else {
+                        schoolYear = currentYear - 1;
+                    }
+                    
+                    let schoolAge = schoolYear - birthDate.getFullYear();
+                    
+                    if (birthDate.getMonth() > 3 || (birthDate.getMonth() === 3 && birthDate.getDate() > 1)) {
+                        schoolAge--;
+                    }
+                    
+                    if (schoolAge >= 3 && schoolAge <= 5) {
+                        const grades = ["年少", "年中", "年長"];
+                        return grades[schoolAge - 3];
+                    } else if (schoolAge >= 6 && schoolAge <= 11) {
+                        return "小" + (schoolAge - 5);
+                    } else if (schoolAge >= 12 && schoolAge <= 14) {
+                        return "中" + (schoolAge - 11);
+                    } else if (schoolAge >= 15 && schoolAge <= 17) {
+                        return "高" + (schoolAge - 14);
+                    }
+                    
+                    return null;
+                },
+                daysUntilBirthday(birthday) {
+                    const today = new Date();
+                    const birthDate = new Date(birthday);
+                    const thisYear = today.getFullYear();
+                    
+                    let nextBirthday = new Date(thisYear, birthDate.getMonth(), birthDate.getDate());
+                    
+                    if (nextBirthday < today) {
+                        nextBirthday = new Date(thisYear + 1, birthDate.getMonth(), birthDate.getDate());
+                    }
+                    
+                    const timeDiff = nextBirthday.getTime() - today.getTime();
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    
+                    return daysDiff;
+                },
+                getCountdownText(daysUntil) {
+                    if (daysUntil === 0) {
+                        return '🎉 今日が誕生日です！';
+                    } else if (daysUntil === 1) {
+                        return '🎂 明日が誕生日です！';
+                    } else {
+                        return `誕生日まで ${daysUntil} 日`;
+                    }
+                },
+                getZodiacSign(birthday) {
+                    const birthDate = new Date(birthday);
+                    const year = birthDate.getFullYear();
+                    const zodiacs = ['🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑', '🐵', '🐓', '🐶', '🐗'];
+                    return zodiacs[(year - 4) % 12];
+                },
+                registerFamily() {
+                    this.clearErrors();
+                    
+                    const name = this.form.name.trim();
+                    const year = this.form.year;
+                    const month = this.form.month;
+                    const day = this.form.day;
+                    
+                    let hasError = false;
+                    
+                    if (!name) {
+                        this.errors.name = '名前を入力してください';
+                        hasError = true;
+                    } else if (this.familyData[name]) {
+                        this.errors.name = 'この名前は既に登録されています';
+                        hasError = true;
+                    }
+                    
+                    if (!year || !month || !day) {
+                        this.errors.birthday = '生年月日を選択してください';
+                        hasError = true;
+                    } else {
+                        const birthday = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const birthDate = new Date(birthday);
+                        const today = new Date();
+                        if (birthDate > today) {
+                            this.errors.birthday = '未来の日付は入力できません';
+                            hasError = true;
+                        }
+                        
+                        // 存在しない日付チェック
+                        if (birthDate.getFullYear() != year || birthDate.getMonth() + 1 != month || birthDate.getDate() != day) {
+                            this.errors.birthday = '存在しない日付です';
+                            hasError = true;
+                        }
+                    }
+                    
+                    if (hasError) return;
+                    
+                    const birthday = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    this.familyData[name] = {
+                        birthday: birthday
+                    };
+                    
+                    this.saveFamilyData(); // localStorageに保存
+                    this.showSuccessMessage(`${name}さんを登録しました`);
+                    this.showListScreen();
+                },
+                deleteFamily(name) {
+                    if (confirm(`${name}さんを削除してもよろしいですか？`)) {
+                        delete this.familyData[name];
+                        this.saveFamilyData(); // localStorageに保存
+                        this.showSuccessMessage(`${name}さんを削除しました`);
+                    }
+                },
+                shareUrl() {
+                    this.showShareModal = true;
+                },
+                closeShareModal() {
+                    this.showShareModal = false;
+                },
+                shareApp() {
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    navigator.clipboard.writeText(baseUrl).then(() => {
+                        alert('アプリのURLをクリップボードにコピーしました');
+                        this.closeShareModal();
+                    }).catch(() => {
+                        alert('URLのコピーに失敗しました');
+                    });
+                },
+                shareData() {
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const params = new URLSearchParams();
+                    
+                    let i = 1;
+                    Object.entries(this.familyData).forEach(([name, data]) => {
+                        params.append(`name${i}`, name);
+                        params.append(`birthday${i}`, data.birthday);
+                        i++;
+                    });
+                    
+                    const shareUrl = baseUrl + '?' + params.toString();
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert('データ付きURLをクリップボードにコピーしました');
+                        this.closeShareModal();
+                    }).catch(() => {
+                        alert('URLのコピーに失敗しました');
+                    });
+                }
+            }
+        });
+        
+        const vueInstance = app.mount('#app');
+        
+        // URLパラメータをチェックしてからlocalStorageを読み込み
+        vueInstance.parseUrlParams();
+        if (Object.keys(vueInstance.familyData).length === 0) {
+            vueInstance.loadFamilyData();
+        }
+    </script>
+</body>
+</html>
