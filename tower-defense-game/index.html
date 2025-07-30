@@ -236,23 +236,32 @@
                 <button 
                     class="tower-btn" 
                     :class="{ selected: selectedTowerType === 'basic' }"
-                    :disabled="money < towerTypes.basic.cost"
+                    :disabled="money < towerTypes.basic.cost || towerCounts.basic >= towerTypes.basic.maxCount"
                     @click="selectTower('basic')">
-                    基本タワー ({{ towerTypes.basic.cost }}G)
+                    基本タワー ({{ towerTypes.basic.cost }}G) {{ towerCounts.basic }}/{{ towerTypes.basic.maxCount }}
                 </button>
                 <button 
                     class="tower-btn" 
                     :class="{ selected: selectedTowerType === 'rapid' }"
-                    :disabled="money < towerTypes.rapid.cost"
+                    :disabled="money < towerTypes.rapid.cost || towerCounts.rapid >= towerTypes.rapid.maxCount"
                     @click="selectTower('rapid')">
-                    連射タワー ({{ towerTypes.rapid.cost }}G)
+                    連射タワー ({{ towerTypes.rapid.cost }}G) {{ towerCounts.rapid }}/{{ towerTypes.rapid.maxCount }}
                 </button>
                 <button 
                     class="tower-btn" 
                     :class="{ selected: selectedTowerType === 'heavy' }"
-                    :disabled="money < towerTypes.heavy.cost"
+                    :disabled="money < towerTypes.heavy.cost || towerCounts.heavy >= towerTypes.heavy.maxCount"
                     @click="selectTower('heavy')">
-                    重砲タワー ({{ towerTypes.heavy.cost }}G)
+                    重砲タワー ({{ towerTypes.heavy.cost }}G) {{ towerCounts.heavy }}/{{ towerTypes.heavy.maxCount }}
+                </button>
+                <button 
+                    class="tower-btn" 
+                    :class="{ selected: selectedTowerType === 'special' }"
+                    :disabled="towerCounts.special >= towerTypes.special.maxCount"
+                    @click="selectTower('special')"
+                    v-if="currentWave > 10"
+                    style="background: linear-gradient(135deg, #8000ff, #9932cc); color: white; font-weight: bold;">
+                    スペシャルタワー (無料) {{ towerCounts.special }}/{{ towerTypes.special.maxCount }}
                 </button>
             </div>
             
@@ -275,7 +284,8 @@
         
         <div v-if="showClearToast" class="toast">
             おめでとうございます！<br>
-            全10ウェーブクリア！
+            全15ウェーブクリア！<br>
+            ボスを撃破しました！
         </div>
         
         <div v-if="showWaveToast" class="toast" style="background: linear-gradient(135deg, #4CAF50, #66BB6A, #81C784); border: 3px solid #4CAF50;">
@@ -293,13 +303,20 @@
                     money: 100,
                     score: 0,
                     currentWave: 1,
-                    maxWaves: 10,
+                    maxWaves: 15,
                     waveInProgress: false,
                     gameOver: false,
                     selectedTowerType: null,
                     showClearToast: false,
                     showWaveToast: false,
                     waveToastMessage: '',
+                    
+                    towerCounts: {
+                        basic: 0,
+                        rapid: 0,
+                        heavy: 0,
+                        special: 0
+                    },
                     
                     enemies: [],
                     towers: [],
@@ -308,9 +325,10 @@
                     enemiesLeft: 0,
                     
                     towerTypes: {
-                        basic: { cost: 50, damage: 25, range: 80, fireRate: 400, color: '#00ff00' },
-                        rapid: { cost: 75, damage: 15, range: 60, fireRate: 60, color: '#ffff00' },
-                        heavy: { cost: 120, damage: 60, range: 100, fireRate: 300, color: '#ff0000' }
+                        basic: { cost: 50, damage: 25, range: 80, fireRate: 200, color: '#00ff00', maxCount: 15 },
+                        rapid: { cost: 75, damage: 15, range: 60, fireRate: 60, color: '#ffff00', maxCount: 5 },
+                        heavy: { cost: 120, damage: 100, range: 100, fireRate: 300, color: '#ff0000', maxCount: 10 },
+                        special: { cost: 0, damage: 200, range: 120, fireRate: 500, color: '#8000ff', maxCount: 2 }
                     },
                     
                     path: [
@@ -370,6 +388,13 @@
                             this.gameOver = true;
                             this.showVictoryToast();
                         } else if (this.currentWave > 1) {
+                            // ウェーブ10を超えたらタワーの最大数を+3
+                            if (this.currentWave === 11) {
+                                this.towerTypes.basic.maxCount += 3;
+                                this.towerTypes.rapid.maxCount += 3;
+                                this.towerTypes.heavy.maxCount += 3;
+                            }
+                            
                             // ウェーブ1以降は自動で次のウェーブを開始
                             setTimeout(() => {
                                 if (!this.gameOver) {
@@ -532,6 +557,14 @@
                         this.ctx.fillStyle = tower.color;
                         this.ctx.fillRect(tower.x - 15, tower.y - 15, 30, 30);
                         
+                        // スペシャルタワーの射程範囲に背景色を付ける
+                        if (tower.type === 'special') {
+                            this.ctx.fillStyle = tower.color + '20'; // 透明度20%
+                            this.ctx.beginPath();
+                            this.ctx.arc(tower.x, tower.y, tower.range, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        }
+                        
                         this.ctx.strokeStyle = tower.color;
                         this.ctx.lineWidth = 1;
                         this.ctx.setLineDash([5, 5]);
@@ -625,7 +658,10 @@
                 placeTower(x, y, type) {
                     const towerType = this.towerTypes[type];
                     
-                    if (this.money >= towerType.cost) {
+                    // スペシャルタワーは無料、その他は通常の条件
+                    const canAfford = type === 'special' || this.money >= towerType.cost;
+                    
+                    if (canAfford && this.towerCounts[type] < towerType.maxCount) {
                         this.towers.push({
                             x: x,
                             y: y,
@@ -637,10 +673,14 @@
                             cooldown: 0
                         });
                         
-                        this.money -= towerType.cost;
+                        // スペシャルタワー以外はお金を消費
+                        if (type !== 'special') {
+                            this.money -= towerType.cost;
+                        }
+                        this.towerCounts[type]++;
                         
-                        // お金に余裕があれば同じタワーを選択状態に保つ
-                        if (this.money < towerType.cost) {
+                        // お金に余裕があり、まだ建設可能であれば同じタワーを選択状態に保つ
+                        if ((type !== 'special' && this.money < towerType.cost) || this.towerCounts[type] >= towerType.maxCount) {
                             this.selectedTowerType = null;
                         }
                     }
@@ -659,14 +699,27 @@
                     
                     const spawnEnemy = () => {
                         if (this.enemiesLeft > 0 && !this.gameOver) {
-                            // ステージ3以降で敵を強化
-                            const baseHealth = 50 + this.currentWave * 25;
-                            const enemyHealth = this.currentWave >= 3 ? baseHealth * 1.5 : baseHealth;
+                            let enemyHealth, enemySpeed, enemyReward, enemyColor, enemySize;
                             
-                            const baseSpeed = (30 + this.currentWave * 5) * 4;
-                            const enemySpeed = this.currentWave >= 3 ? baseSpeed * 1.3 : baseSpeed;
-                            
-                            const enemyReward = 10 + this.currentWave * 2;
+                            // ウェーブ15はボス敵
+                            if (this.currentWave === 15) {
+                                enemyHealth = 700;
+                                enemySpeed = (30 + this.currentWave * 5) * 2;
+                                enemyReward = 100;
+                                enemyColor = '#ff0000';
+                                enemySize = 25;
+                            } else {
+                                // 通常の敵
+                                const baseHealth = 50 + this.currentWave * 25;
+                                enemyHealth = this.currentWave >= 3 ? baseHealth * 1.5 : baseHealth;
+                                
+                                const baseSpeed = (30 + this.currentWave * 5) * 4;
+                                enemySpeed = this.currentWave >= 3 ? baseSpeed * 1.3 : baseSpeed;
+                                
+                                enemyReward = 10 + this.currentWave * 2;
+                                enemyColor = `hsl(${this.currentWave * 30}, 70%, 60%)`;
+                                enemySize = 8 + this.currentWave;
+                            }
                             
                             this.enemies.push({
                                 x: this.path[0].x,
@@ -676,8 +729,9 @@
                                 maxHealth: enemyHealth,
                                 speed: enemySpeed,
                                 reward: enemyReward,
-                                color: `hsl(${this.currentWave * 30}, 70%, 60%)`,
-                                size: 8 + this.currentWave
+                                color: enemyColor,
+                                size: enemySize,
+                                isBoss: this.currentWave === 15
                             });
                             
                             this.enemiesLeft--;
@@ -704,6 +758,12 @@
                     this.towers = [];
                     this.bullets = [];
                     this.enemiesLeft = 0;
+                    this.towerCounts = {
+                        basic: 0,
+                        rapid: 0,
+                        heavy: 0,
+                        special: 0
+                    };
                 },
                 
                 showVictoryToast() {
@@ -718,7 +778,7 @@
                     this.showWaveToast = true;
                     setTimeout(() => {
                         this.showWaveToast = false;
-                    }, 2000);
+                    }, 1000);
                 }
             }
         }).mount('#app');
