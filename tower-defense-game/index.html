@@ -331,16 +331,7 @@
                         special: { cost: 0, damage: 200, range: 120, fireRate: 500, color: '#8000ff', maxCount: 2 }
                     },
                     
-                    path: [
-                        { x: 0, y: 300 },
-                        { x: 200, y: 300 },
-                        { x: 200, y: 150 },
-                        { x: 400, y: 150 },
-                        { x: 400, y: 450 },
-                        { x: 600, y: 450 },
-                        { x: 600, y: 200 },
-                        { x: 800, y: 200 }
-                    ],
+                    path: [],
                     
                     animationId: null,
                     lastTime: 0
@@ -349,6 +340,7 @@
             
             mounted() {
                 this.ctx = this.$refs.gameCanvas.getContext('2d');
+                this.generateRandomPath();
                 this.startGameLoop();
             },
             
@@ -764,6 +756,14 @@
                         heavy: 0,
                         special: 0
                     };
+                    
+                    // タワーの最大数をリセット
+                    this.towerTypes.basic.maxCount = 15;
+                    this.towerTypes.rapid.maxCount = 5;
+                    this.towerTypes.heavy.maxCount = 10;
+                    
+                    // 新しいランダムマップを生成
+                    this.generateRandomPath();
                 },
                 
                 showVictoryToast() {
@@ -779,6 +779,57 @@
                     setTimeout(() => {
                         this.showWaveToast = false;
                     }, 1000);
+                },
+                
+                generateRandomPath() {
+                    // 曲がり角6回のランダムパスを生成
+                    this.path = [];
+                    
+                    // 開始点（左端）
+                    const startY = 200 + Math.random() * 200; // Y座標をランダム化
+                    this.path.push({ x: 0, y: startY });
+                    
+                    let currentX = 0;
+                    let currentY = startY;
+                    let direction = 'right'; // 'right', 'up', 'down'
+                    
+                    // 6回の曲がり角を作成
+                    for (let i = 0; i < 6; i++) {
+                        // X方向に進む距離をランダム化（最低100、最大150）
+                        const segmentLength = 100 + Math.random() * 50;
+                        
+                        if (direction === 'right') {
+                            currentX += segmentLength;
+                            this.path.push({ x: currentX, y: currentY });
+                            
+                            // 次は上下どちらかにランダムで曲がる
+                            const maxUp = currentY - 100;
+                            const maxDown = 500 - currentY;
+                            
+                            if (maxUp > 50 && maxDown > 50) {
+                                direction = Math.random() < 0.5 ? 'up' : 'down';
+                            } else if (maxUp > 50) {
+                                direction = 'up';
+                            } else {
+                                direction = 'down';
+                            }
+                        } else {
+                            // 上下移動
+                            const moveDistance = 80 + Math.random() * 80;
+                            
+                            if (direction === 'up') {
+                                currentY = Math.max(100, currentY - moveDistance);
+                            } else {
+                                currentY = Math.min(500, currentY + moveDistance);
+                            }
+                            
+                            this.path.push({ x: currentX, y: currentY });
+                            direction = 'right';
+                        }
+                    }
+                    
+                    // 最終点（右端）
+                    this.path.push({ x: 800, y: currentY });
                 }
             }
         }).mount('#app');
