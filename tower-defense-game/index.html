@@ -303,9 +303,9 @@
                     enemiesLeft: 0,
                     
                     towerTypes: {
-                        basic: { cost: 50, damage: 25, range: 80, fireRate: 1000, color: '#00ff00' },
-                        rapid: { cost: 75, damage: 15, range: 60, fireRate: 400, color: '#ffff00' },
-                        heavy: { cost: 120, damage: 60, range: 100, fireRate: 2000, color: '#ff0000' }
+                        basic: { cost: 50, damage: 25, range: 80, fireRate: 400, color: '#00ff00' },
+                        rapid: { cost: 75, damage: 15, range: 60, fireRate: 60, color: '#ffff00' },
+                        heavy: { cost: 120, damage: 60, range: 100, fireRate: 300, color: '#ff0000' }
                     },
                     
                     path: [
@@ -469,7 +469,7 @@
                         targetY: target.y,
                         targetEnemy: target,
                         damage: tower.damage,
-                        speed: 300
+                        speed: 400
                     });
                 },
                 
@@ -549,7 +549,7 @@
                     this.ctx.fillStyle = '#ffff00';
                     this.bullets.forEach(bullet => {
                         this.ctx.beginPath();
-                        this.ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
+                        this.ctx.arc(bullet.x, bullet.y, 6, 0, Math.PI * 2);
                         this.ctx.fill();
                     });
                 },
@@ -635,12 +635,17 @@
                     this.waveInProgress = true;
                     this.enemiesLeft = Math.max(3, 5 + (this.currentWave - 1) * 2);
                     
-                    const spawnInterval = Math.max(500, 1500 - this.currentWave * 100);
+                    const spawnInterval = Math.max(100, 400 - this.currentWave * 25);
                     
                     const spawnEnemy = () => {
                         if (this.enemiesLeft > 0 && !this.gameOver) {
-                            const enemyHealth = 50 + this.currentWave * 25;
-                            const enemySpeed = 30 + this.currentWave * 5;
+                            // ステージ3以降で敵を強化
+                            const baseHealth = 50 + this.currentWave * 25;
+                            const enemyHealth = this.currentWave >= 3 ? baseHealth * 1.5 : baseHealth;
+                            
+                            const baseSpeed = (30 + this.currentWave * 5) * 4;
+                            const enemySpeed = this.currentWave >= 3 ? baseSpeed * 1.3 : baseSpeed;
+                            
                             const enemyReward = 10 + this.currentWave * 2;
                             
                             this.enemies.push({
