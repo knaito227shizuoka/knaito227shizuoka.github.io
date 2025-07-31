@@ -266,9 +266,6 @@
             </div>
             
             <div class="controls">
-                <button class="btn" @click="startWave" :disabled="waveInProgress || gameOver" v-if="currentWave === 1 && !waveInProgress">
-                    {{ waveInProgress ? 'ウェーブ進行中' : 'ウェーブ開始' }}
-                </button>
                 <button class="btn" @click="resetGame" v-if="gameOver">
                     ゲームリセット
                 </button>
@@ -310,6 +307,8 @@
                     showClearToast: false,
                     showWaveToast: false,
                     waveToastMessage: '',
+                    
+                    firstTowerPlaced: false,
                     
                     towerCounts: {
                         basic: 0,
@@ -671,6 +670,12 @@
                         }
                         this.towerCounts[type]++;
                         
+                        // 最初のタワーが置かれたら自動でウェーブ開始
+                        if (!this.firstTowerPlaced && !this.waveInProgress && !this.gameOver) {
+                            this.firstTowerPlaced = true;
+                            this.startWave();
+                        }
+                        
                         // お金に余裕があり、まだ建設可能であれば同じタワーを選択状態に保つ
                         if ((type !== 'special' && this.money < towerType.cost) || this.towerCounts[type] >= towerType.maxCount) {
                             this.selectedTowerType = null;
@@ -756,6 +761,8 @@
                         heavy: 0,
                         special: 0
                     };
+                    
+                    this.firstTowerPlaced = false;
                     
                     // タワーの最大数をリセット
                     this.towerTypes.basic.maxCount = 15;
