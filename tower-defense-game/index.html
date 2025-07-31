@@ -10,8 +10,8 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background: #1a1a1a;
-            color: white;
+            background: linear-gradient(135deg, #1e4d1e, #2d5a2d, #1a3d1a);
+            color: #333;
             height: 100vh;
             overflow: hidden;
         }
@@ -28,22 +28,22 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #1e4d1e, #2d5a2d, #1a3d1a);
         }
         
         .game-canvas {
-            border: 2px solid #444;
-            background: #2a2a2a;
+            border: 2px solid #ccc;
+            background: #7fcc7f;
             cursor: crosshair;
         }
         
         .ui-panel {
-            background: #333;
+            background: #d2b48c;
             padding: 20px;
             min-width: 300px;
             max-width: 350px;
             overflow-y: auto;
-            border-left: 2px solid #444;
+            border-left: 2px solid #ccc;
         }
         
         .stats {
@@ -65,25 +65,26 @@
             width: 100%;
             margin: 5px 0;
             padding: 10px;
-            background: #555;
-            color: white;
-            border: none;
+            background: #e0e0e0;
+            color: #333;
+            border: 1px solid #ccc;
             border-radius: 4px;
             cursor: pointer;
             transition: background 0.2s;
         }
         
         .tower-btn:hover {
-            background: #666;
+            background: #d0d0d0;
         }
         
         .tower-btn.selected {
             background: #007acc;
+            color: white;
         }
         
         .tower-btn:disabled {
-            background: #333;
-            color: #666;
+            background: #f0f0f0;
+            color: #999;
             cursor: not-allowed;
         }
         
@@ -108,13 +109,13 @@
         }
         
         .btn:disabled {
-            background: #333;
-            color: #666;
+            background: #f0f0f0;
+            color: #999;
             cursor: not-allowed;
         }
         
         .wave-info {
-            background: #444;
+            background: #e8e8e8;
             padding: 10px;
             border-radius: 4px;
             margin: 10px 0;
@@ -528,7 +529,7 @@
                 },
                 
                 drawPath() {
-                    this.ctx.strokeStyle = '#444';
+                    this.ctx.strokeStyle = '#8B4513';
                     this.ctx.lineWidth = 40;
                     this.ctx.lineCap = 'round';
                     this.ctx.lineJoin = 'round';
