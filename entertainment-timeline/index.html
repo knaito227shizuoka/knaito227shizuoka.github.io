@@ -248,6 +248,8 @@
         
         .table-container {
             overflow-x: auto;
+            overflow-y: auto;
+            height: calc(100vh - 100px);
             margin: 0;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -272,6 +274,9 @@
             font-size: 12px;
             border: none;
             min-width: 70px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         .timeline-table th:first-child {
@@ -279,6 +284,10 @@
         }
         
         .timeline-table th:nth-child(2) {
+            min-width: 80px;
+        }
+        
+        .timeline-table th:nth-child(3) {
             min-width: 80px;
         }
         
@@ -305,15 +314,27 @@
             min-width: 80px;
         }
         
-        .timeline-table td:nth-child(n+3) {
+        .timeline-table td:nth-child(3) {
+            font-weight: 600;
+            background: #f8f9fa;
+            color: #333;
+            font-size: 10px;
+            min-width: 80px;
+        }
+        
+        .timeline-table td:nth-child(n+4) {
             border-left: 2px solid #e0e0e0;
         }
         
-        .timeline-table th:nth-child(n+3) {
+        .timeline-table th:nth-child(n+4) {
             border-left: 2px solid rgba(255, 255, 255, 0.3);
         }
         
         .rider-name {
+            font-weight: bold;
+        }
+        
+        .ultraman-name {
             font-weight: bold;
         }
         
@@ -419,6 +440,7 @@
                     <tr>
                         <th>年月</th>
                         <th>仮面ライダー</th>
+                        <th>ウルトラマン</th>
                         <th v-for="(user, userName) in users" :key="userName" @click="editUser(userName)" style="cursor: pointer;">{{ userName }}</th>
                     </tr>
                 </thead>
@@ -426,6 +448,7 @@
                     <tr v-for="entry in timelineData" :key="entry.ym" :class="{ 'school-year-border': isSchoolYearStart(entry.ym) }">
                         <td>{{ entry.ym }}</td>
                         <td class="rider-name">{{ entry.rider }}</td>
+                        <td class="ultraman-name">{{ entry.ultraman }}</td>
                         <td v-for="(user, userName) in users" :key="userName" class="age-info">
                             <div v-if="user.ym[entry.ym]">
                                 {{ user.ym[entry.ym].age }} {{ user.ym[entry.ym].grade }}
@@ -452,6 +475,21 @@
                         birthMonth: ''
                     },
                     users: {},
+                    ultramanData: [
+                        { name: 'ティガ', start: '1996-09', end: '1997-08' },
+                        { name: 'ダイナ', start: '1997-09', end: '1998-08' },
+                        { name: 'ガイア', start: '1998-09', end: '1999-08' },
+                        { name: 'コスモス', start: '2001-07', end: '2002-09' },
+                        { name: 'ネクサス', start: '2004-10', end: '2005-06' },
+                        { name: 'マックス', start: '2005-07', end: '2006-03' },
+                        { name: 'メビウス', start: '2006-04', end: '2007-03' },
+                        { name: 'ギンガ', start: '2013-07', end: '2013-12' },
+                        { name: 'ギンガS', start: '2014-07', end: '2014-12' },
+                        { name: 'X（エックス）', start: '2015-07', end: '2015-12' },
+                        { name: 'オーブ', start: '2016-07', end: '2016-12' },
+                        { name: 'ジード', start: '2017-07', end: '2017-12' },
+                        { name: 'R/B（ルーブ）', start: '2018-07', end: '2018-12' }
+                    ],
                     riderData: [
                         { name: 'クウガ', start: '2000-02', end: '2001-01' },
                         { name: 'アギト', start: '2001-02', end: '2002-01' },
@@ -463,7 +501,7 @@
                         { name: '電王', start: '2007-02', end: '2008-01' },
                         { name: 'キバ', start: '2008-02', end: '2009-01' },
                         { name: 'ディケイド', start: '2009-02', end: '2009-08' },
-                        { name: 'W', start: '2009-09', end: '2010-08' },
+                        { name: 'W（ダブル）', start: '2009-09', end: '2010-08' },
                         { name: 'オーズ', start: '2010-09', end: '2011-08' },
                         { name: 'フォーゼ', start: '2011-09', end: '2012-08' },
                         { name: 'ウィザード', start: '2012-09', end: '2013-08' },
@@ -487,6 +525,22 @@
                 timelineData() {
                     const timeline = [];
                     
+                    // 全期間（1996-09から2026-08まで）の月を生成
+                    const startDate = new Date('1996-09-01');
+                    const endDate = new Date('2026-08-01');
+                    let currentDate = new Date(startDate);
+                    
+                    while (currentDate <= endDate) {
+                        const ym = currentDate.getFullYear() + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
+                        timeline.push({
+                            ym: ym,
+                            rider: '',
+                            ultraman: ''
+                        });
+                        currentDate.setMonth(currentDate.getMonth() + 1);
+                    }
+                    
+                    // 仮面ライダーデータの処理
                     this.riderData.forEach(rider => {
                         const startDate = new Date(rider.start + '-01');
                         const endDate = new Date(rider.end + '-01');
@@ -494,15 +548,31 @@
                         let currentDate = new Date(startDate);
                         while (currentDate <= endDate) {
                             const ym = currentDate.getFullYear() + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
-                            timeline.push({
-                                ym: ym,
-                                rider: rider.name
-                            });
+                            const entry = timeline.find(entry => entry.ym === ym);
+                            if (entry) {
+                                entry.rider = rider.name;
+                            }
                             currentDate.setMonth(currentDate.getMonth() + 1);
                         }
                     });
                     
-                    return timeline.sort((a, b) => a.ym.localeCompare(b.ym));
+                    // ウルトラマンデータの処理
+                    this.ultramanData.forEach(ultraman => {
+                        const startDate = new Date(ultraman.start + '-01');
+                        const endDate = new Date(ultraman.end + '-01');
+                        
+                        let currentDate = new Date(startDate);
+                        while (currentDate <= endDate) {
+                            const ym = currentDate.getFullYear() + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
+                            const entry = timeline.find(entry => entry.ym === ym);
+                            if (entry) {
+                                entry.ultraman = ultraman.name;
+                            }
+                            currentDate.setMonth(currentDate.getMonth() + 1);
+                        }
+                    });
+                    
+                    return timeline;
                 }
             },
             methods: {
@@ -599,7 +669,7 @@
                 
                 generateUserYmData(user) {
                     const birthDate = new Date(user.birthday + '-01');
-                    const currentDate = new Date('2000-01-01');
+                    const currentDate = new Date('1996-01-01');
                     const endDate = new Date('2026-12-01');
                     
                     while (currentDate <= endDate) {
