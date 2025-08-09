@@ -45,7 +45,9 @@
         
         .add-user-section {
             padding: 20px 0;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
             position: sticky;
             top: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -66,11 +68,26 @@
             backdrop-filter: blur(10px);
         }
         
-        .add-user-btn:hover {
+        .add-user-btn:hover,
+        .share-btn:hover {
             transform: translateY(-2px);
             background: rgba(255, 255, 255, 0.3);
             border-color: rgba(255, 255, 255, 0.5);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .share-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 14px 28px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
         
         .modal {
@@ -218,6 +235,17 @@
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
         
+        .share-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .share-option-btn {
+            width: 100%;
+        }
+        
         .table-container {
             overflow-x: auto;
             margin: 0;
@@ -277,6 +305,14 @@
             min-width: 80px;
         }
         
+        .timeline-table td:nth-child(n+3) {
+            border-left: 2px solid #e0e0e0;
+        }
+        
+        .timeline-table th:nth-child(n+3) {
+            border-left: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
         .rider-name {
             font-weight: bold;
         }
@@ -332,7 +368,8 @@
         
         <div class="container">
             <div class="add-user-section">
-                <button @click="showModal = true" class="add-user-btn">👤 ユーザーを追加</button>
+                <button @click="showModal = true" class="add-user-btn">追加</button>
+                <button @click="showShareModal = true" class="share-btn">共有</button>
             </div>
             
             <div v-if="showModal" class="modal">
@@ -358,6 +395,19 @@
                         <button @click="saveUser" class="btn-primary">{{ editingIndex >= 0 ? '更新' : '登録' }}</button>
                         <button v-if="editingIndex >= 0" @click="deleteUser" class="btn-danger">削除</button>
                         <button @click="cancelAddUser" class="btn-secondary">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div v-if="showShareModal" class="modal">
+                <div class="modal-content">
+                    <h3>📤 共有</h3>
+                    <div class="share-options">
+                        <button @click="shareApp" class="btn-primary share-option-btn">このアプリを教える</button>
+                        <button @click="shareData" class="btn-primary share-option-btn">登録したデータを共有</button>
+                    </div>
+                    <div class="modal-buttons">
+                        <button @click="closeShareModal" class="btn-secondary">閉じる</button>
                     </div>
                 </div>
             </div>
@@ -394,6 +444,7 @@
             data() {
                 return {
                     showModal: false,
+                    showShareModal: false,
                     editingIndex: -1,
                     newUser: {
                         name: '',
@@ -639,13 +690,81 @@
                     }
                 },
                 
+                loadFromUrlParams() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    let hasUserData = false;
+                    
+                    try {
+                        let userIndex = 1;
+                        while (urlParams.has(`user${userIndex}name`)) {
+                            const userName = urlParams.get(`user${userIndex}name`);
+                            const birthday = urlParams.get(`user${userIndex}birth`);
+                            
+                            if (userName && birthday) {
+                                const user = {
+                                    birthday: birthday,
+                                    ym: {}
+                                };
+                                this.generateUserYmData(user);
+                                this.users[userName] = user;
+                                hasUserData = true;
+                            }
+                            userIndex++;
+                        }
+                        
+                        if (hasUserData) {
+                            // URLパラメータから読み込んだデータをLocalStorageに保存
+                            this.saveToLocalStorage();
+                            
+                            // URLからパラメータを削除
+                            const cleanUrl = window.location.origin + window.location.pathname;
+                            window.history.replaceState({}, document.title, cleanUrl);
+                        }
+                    } catch (e) {
+                        console.error('URLパラメータ読み込みエラー:', e);
+                    }
+                },
+                
                 isSchoolYearStart(ym) {
                     const month = ym.split('-')[1];
                     return month === '04';
+                },
+                
+                shareApp() {
+                    // GETパラメータを除いたクリーンなURLを作成
+                    const cleanUrl = window.location.origin + window.location.pathname;
+                    navigator.clipboard.writeText(cleanUrl);
+                    alert('クリップボードにコピーしました');
+                },
+                
+                shareData() {
+                    // ユーザーデータをGETパラメータとしてエンコード
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const params = new URLSearchParams();
+                    
+                    Object.keys(this.users).forEach((userName, index) => {
+                        const userIndex = index + 1;
+                        params.append(`user${userIndex}name`, userName);
+                        params.append(`user${userIndex}birth`, this.users[userName].birthday);
+                    });
+                    
+                    const shareUrl = `${baseUrl}?${params.toString()}`;
+                    navigator.clipboard.writeText(shareUrl);
+                    alert('クリップボードにコピーしました');
+                },
+                
+                closeShareModal() {
+                    this.showShareModal = false;
                 }
             },
             mounted() {
-                this.loadFromLocalStorage();
+                // まずURLパラメータをチェック、なければLocalStorageから読み込み
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('user1name')) {
+                    this.loadFromUrlParams();
+                } else {
+                    this.loadFromLocalStorage();
+                }
             }
         }).mount('#app');
     </script>
