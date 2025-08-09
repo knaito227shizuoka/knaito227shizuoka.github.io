@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エンタメ年表</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0 16px;
+        }
+        
+        .add-user-section {
+            padding: 20px 0;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 30;
+        }
+        
+        .add-user-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 14px 28px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .add-user-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            animation: modalShow 0.3s ease forwards;
+        }
+        
+        @keyframes modalShow {
+            to {
+                transform: scale(1);
+            }
+        }
+        
+        .modal h3 {
+            margin: 0 0 20px 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+        }
+        
+        .user-form {
+            margin-bottom: 16px;
+        }
+        
+        .user-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .user-form input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .user-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .birth-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .birth-inputs input {
+            width: 80px;
+            text-align: center;
+        }
+        
+        .notice {
+            font-size: 12px;
+            color: #666;
+            margin: 12px 0;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary {
+            flex: 1;
+            background: transparent;
+            color: #666;
+            border: 2px solid #e1e5e9;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .btn-danger {
+            flex: 1;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            height: calc(100vh - 100px);
+            margin: 0 -16px;
+            padding: 0 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .timeline-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 400px;
+            font-size: 11px;
+            margin: 0;
+        }
+        
+        .timeline-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 6px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            border: none;
+            min-width: 70px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .timeline-table th:first-child {
+            min-width: 60px;
+        }
+        
+        .timeline-table th:nth-child(2) {
+            min-width: 80px;
+        }
+        
+        .timeline-table td {
+            padding: 8px 4px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            min-width: 70px;
+            background: white;
+        }
+        
+        .timeline-table td:first-child {
+            font-weight: 600;
+            background: #f8f9fa;
+            font-size: 10px;
+            min-width: 60px;
+        }
+        
+        .timeline-table td:nth-child(2) {
+            font-weight: 600;
+            background: #f1f3f4;
+            color: #333;
+            font-size: 10px;
+            min-width: 80px;
+        }
+        
+        .rider-name {
+            font-weight: bold;
+        }
+        
+        .age-info {
+            font-size: 10px;
+            color: #555;
+            line-height: 1.3;
+            font-weight: 500;
+        }
+        
+        .school-year-border {
+            border-top: 2px solid #667eea !important;
+        }
+        
+        .school-year-border td {
+            border-top: 2px solid #667eea !important;
+        }
+        
+        
+        /* レスポンシブ調整 */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .timeline-table {
+                font-size: 10px;
+            }
+            
+            .timeline-table th {
+                padding: 8px 4px;
+                font-size: 11px;
+            }
+            
+            .timeline-table td {
+                padding: 6px 2px;
+            }
+            
+            .age-info {
+                font-size: 9px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        
+        <div class="container">
+            <div class="add-user-section">
+                <button @click="showModal = true" class="add-user-btn">👤 ユーザーを追加</button>
+            </div>
+            
+            <div v-if="showModal" class="modal">
+                <div class="modal-content">
+                    <h3>{{ editingIndex >= 0 ? '✏️ ユーザー編集' : '✨ ユーザー追加' }}</h3>
+                    <div class="user-form">
+                        <label>ユーザー名</label>
+                        <input v-model="newUser.name" type="text" placeholder="名前を入力してください">
+                    </div>
+                    <div class="user-form">
+                        <label>誕生年月</label>
+                        <div class="birth-inputs">
+                            <input v-model="newUser.birthYear" type="number" placeholder="年">
+                            <span>年</span>
+                            <input v-model="newUser.birthMonth" type="number" min="1" max="12" placeholder="月">
+                            <span>月</span>
+                        </div>
+                    </div>
+                    <div class="notice">
+                        ※4月1日生まれの方は3月で登録してください
+                    </div>
+                    <div class="modal-buttons">
+                        <button @click="saveUser" class="btn-primary">{{ editingIndex >= 0 ? '更新' : '登録' }}</button>
+                        <button v-if="editingIndex >= 0" @click="deleteUser" class="btn-danger">削除</button>
+                        <button @click="cancelAddUser" class="btn-secondary">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="timeline-table">
+                <thead>
+                    <tr>
+                        <th>年月</th>
+                        <th>仮面ライダー</th>
+                        <th v-for="(user, index) in users" :key="user.name" @click="editUser(index)" style="cursor: pointer;">{{ user.name }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="entry in timelineData" :key="entry.ym" :class="{ 'school-year-border': isSchoolYearStart(entry.ym) }">
+                        <td>{{ entry.ym }}</td>
+                        <td class="rider-name">{{ entry.rider }}</td>
+                        <td v-for="user in users" :key="user.name" class="age-info">
+                            <div v-if="user.ym[entry.ym]">
+                                {{ user.ym[entry.ym].age }} {{ user.ym[entry.ym].grade }}
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    showModal: false,
+                    editingIndex: -1,
+                    newUser: {
+                        name: '',
+                        birthYear: '',
+                        birthMonth: ''
+                    },
+                    users: [],
+                    riderData: [
+                        { name: 'クウガ', start: '2000-02', end: '2001-01' },
+                        { name: 'アギト', start: '2001-02', end: '2002-01' },
+                        { name: '龍騎', start: '2002-02', end: '2003-01' },
+                        { name: '555', start: '2003-02', end: '2004-01' },
+                        { name: '剣（ブレイド）', start: '2004-02', end: '2005-01' },
+                        { name: '響鬼', start: '2005-02', end: '2006-01' },
+                        { name: 'カブト', start: '2006-02', end: '2007-01' },
+                        { name: '電王', start: '2007-02', end: '2008-01' },
+                        { name: 'キバ', start: '2008-02', end: '2009-01' },
+                        { name: 'ディケイド', start: '2009-02', end: '2009-08' },
+                        { name: 'W', start: '2009-09', end: '2010-08' },
+                        { name: 'オーズ', start: '2010-09', end: '2011-08' },
+                        { name: 'フォーゼ', start: '2011-09', end: '2012-08' },
+                        { name: 'ウィザード', start: '2012-09', end: '2013-08' },
+                        { name: '鎧武（ガイム）', start: '2013-09', end: '2014-08' },
+                        { name: 'ドライブ', start: '2014-09', end: '2015-08' },
+                        { name: 'ゴースト', start: '2015-09', end: '2016-08' },
+                        { name: 'エグゼイド', start: '2016-09', end: '2017-08' },
+                        { name: 'ビルド', start: '2017-09', end: '2018-08' },
+                        { name: 'ジオウ', start: '2018-09', end: '2019-08' },
+                        { name: 'ゼロワン', start: '2019-09', end: '2020-08' },
+                        { name: 'セイバー', start: '2020-09', end: '2021-08' },
+                        { name: 'リバイス', start: '2021-09', end: '2022-08' },
+                        { name: 'ギーツ', start: '2022-09', end: '2023-08' },
+                        { name: 'ガッチャード', start: '2023-09', end: '2024-08' },
+                        { name: 'ガヴ', start: '2024-09', end: '2025-08' },
+                        { name: 'ゼッツ', start: '2025-09', end: '2026-08' }
+                    ]
+                };
+            },
+            computed: {
+                timelineData() {
+                    const timeline = [];
+                    
+                    this.riderData.forEach(rider => {
+                        const startDate = new Date(rider.start + '-01');
+                        const endDate = new Date(rider.end + '-01');
+                        
+                        let currentDate = new Date(startDate);
+                        while (currentDate <= endDate) {
+                            const ym = currentDate.getFullYear() + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
+                            timeline.push({
+                                ym: ym,
+                                rider: rider.name
+                            });
+                            currentDate.setMonth(currentDate.getMonth() + 1);
+                        }
+                    });
+                    
+                    return timeline.sort((a, b) => a.ym.localeCompare(b.ym));
+                }
+            },
+            methods: {
+                editUser(index) {
+                    this.editingIndex = index;
+                    const user = this.users[index];
+                    const [year, month] = user.birthday.split('-');
+                    this.newUser = {
+                        name: user.name,
+                        birthYear: year,
+                        birthMonth: parseInt(month)
+                    };
+                    this.showModal = true;
+                },
+                
+                saveUser() {
+                    if (!this.newUser.name || !this.newUser.birthYear || !this.newUser.birthMonth) {
+                        alert('すべての項目を入力してください');
+                        return;
+                    }
+                    
+                    const user = {
+                        name: this.newUser.name,
+                        birthday: this.newUser.birthYear + '-' + String(this.newUser.birthMonth).padStart(2, '0'),
+                        ym: {}
+                    };
+                    
+                    this.generateUserYmData(user);
+                    
+                    if (this.editingIndex >= 0) {
+                        // 編集モード
+                        this.users[this.editingIndex] = user;
+                    } else {
+                        // 追加モード
+                        this.users.push(user);
+                    }
+                    
+                    this.saveToCookie();
+                    this.showModal = false;
+                    this.editingIndex = -1;
+                    this.newUser = { name: '', birthYear: '', birthMonth: '' };
+                },
+                
+                deleteUser() {
+                    if (confirm('このユーザーを削除してもよろしいですか？')) {
+                        this.users.splice(this.editingIndex, 1);
+                        this.saveToCookie();
+                        this.showModal = false;
+                        this.editingIndex = -1;
+                        this.newUser = { name: '', birthYear: '', birthMonth: '' };
+                    }
+                },
+                
+                cancelAddUser() {
+                    this.showModal = false;
+                    this.editingIndex = -1;
+                    this.newUser = { name: '', birthYear: '', birthMonth: '' };
+                },
+                
+                generateUserYmData(user) {
+                    const birthDate = new Date(user.birthday + '-01');
+                    const currentDate = new Date('2000-01-01');
+                    const endDate = new Date('2026-12-01');
+                    
+                    while (currentDate <= endDate) {
+                        const ym = currentDate.getFullYear() + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
+                        
+                        const ageMonths = (currentDate.getFullYear() - birthDate.getFullYear()) * 12 + (currentDate.getMonth() - birthDate.getMonth());
+                        const age = Math.floor(ageMonths / 12);
+                        
+                        // 年齢がマイナスの場合はデータを作成しない
+                        if (age < 0) {
+                            currentDate.setMonth(currentDate.getMonth() + 1);
+                            continue;
+                        }
+                        
+                        let grade = '';
+                        
+                        // 学年計算: 4月1日基準で計算
+                        const currentYear = currentDate.getFullYear();
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const birthYear = birthDate.getFullYear();
+                        const birthMonth = birthDate.getMonth() + 1;
+                        
+                        // 学年度を計算（4月～翌年3月が1学年度）
+                        let schoolYear;
+                        if (currentMonth >= 4) {
+                            // 4月以降は現在の年度
+                            schoolYear = currentYear;
+                        } else {
+                            // 1月～3月は前年度
+                            schoolYear = currentYear - 1;
+                        }
+                        
+                        // 入学年度を計算（小学校は満6歳の4月入学）
+                        let entryYear;
+                        if (birthMonth >= 4) {
+                            // 4月～12月生まれは7歳になる年に入学
+                            entryYear = birthYear + 7;
+                        } else {
+                            // 1月～3月生まれは6歳になる年に入学
+                            entryYear = birthYear + 6;
+                        }
+                        
+                        const schoolGrade = schoolYear - entryYear + 1;
+                        
+                        if (schoolGrade >= 1 && schoolGrade <= 6) {
+                            grade = '小' + schoolGrade;
+                        } else if (schoolGrade >= 7 && schoolGrade <= 9) {
+                            grade = '中' + (schoolGrade - 6);
+                        } else if (schoolGrade >= 10 && schoolGrade <= 12) {
+                            grade = '高' + (schoolGrade - 9);
+                        }
+                        
+                        user.ym[ym] = {
+                            age: age + '歳',
+                            grade: grade
+                        };
+                        
+                        currentDate.setMonth(currentDate.getMonth() + 1);
+                    }
+                },
+                
+                saveToCookie() {
+                    const userData = this.users.map(user => ({
+                        name: user.name,
+                        birthday: user.birthday
+                    }));
+                    document.cookie = `users=${JSON.stringify(userData)}; max-age=${60*60*24*365}; path=/`;
+                },
+                
+                loadFromCookie() {
+                    const cookies = document.cookie.split(';');
+                    for (let cookie of cookies) {
+                        const [key, value] = cookie.trim().split('=');
+                        if (key === 'users') {
+                            try {
+                                const userData = JSON.parse(decodeURIComponent(value));
+                                userData.forEach(userInfo => {
+                                    const user = {
+                                        name: userInfo.name,
+                                        birthday: userInfo.birthday,
+                                        ym: {}
+                                    };
+                                    this.generateUserYmData(user);
+                                    this.users.push(user);
+                                });
+                            } catch (e) {
+                                console.error('Cookie読み込みエラー:', e);
+                            }
+                            break;
+                        }
+                    }
+                },
+                
+                isSchoolYearStart(ym) {
+                    const month = ym.split('-')[1];
+                    return month === '04';
+                }
+            },
+            mounted() {
+                this.loadFromCookie();
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
