@@ -41,7 +41,6 @@
         .container {
             max-width: 100%;
             margin: 0;
-            padding: 0 16px;
         }
         
         .add-user-section {
@@ -221,13 +220,9 @@
         
         .table-container {
             overflow-x: auto;
-            overflow-y: auto;
-            height: calc(100vh - 100px);
-            margin: 0 -16px;
-            padding: 0 16px;
+            margin: 0;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 16px 16px 0 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             position: relative;
         }
@@ -247,12 +242,8 @@
             text-align: center;
             font-weight: 600;
             font-size: 12px;
-            position: sticky;
-            top: 0;
-            z-index: 20;
             border: none;
             min-width: 70px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
         
         .timeline-table th:first-child {
@@ -354,7 +345,7 @@
                     <div class="user-form">
                         <label>誕生年月</label>
                         <div class="birth-inputs">
-                            <input v-model="newUser.birthYear" type="number" placeholder="年">
+                            <input v-model="newUser.birthYear" type="number" min="1900" max="2090" placeholder="年">
                             <span>年</span>
                             <input v-model="newUser.birthMonth" type="number" min="1" max="12" placeholder="月">
                             <span>月</span>
@@ -378,14 +369,14 @@
                     <tr>
                         <th>年月</th>
                         <th>仮面ライダー</th>
-                        <th v-for="(user, index) in users" :key="user.name" @click="editUser(index)" style="cursor: pointer;">{{ user.name }}</th>
+                        <th v-for="(user, userName) in users" :key="userName" @click="editUser(userName)" style="cursor: pointer;">{{ userName }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="entry in timelineData" :key="entry.ym" :class="{ 'school-year-border': isSchoolYearStart(entry.ym) }">
                         <td>{{ entry.ym }}</td>
                         <td class="rider-name">{{ entry.rider }}</td>
-                        <td v-for="user in users" :key="user.name" class="age-info">
+                        <td v-for="(user, userName) in users" :key="userName" class="age-info">
                             <div v-if="user.ym[entry.ym]">
                                 {{ user.ym[entry.ym].age }} {{ user.ym[entry.ym].grade }}
                             </div>
@@ -409,7 +400,7 @@
                         birthYear: '',
                         birthMonth: ''
                     },
-                    users: [],
+                    users: {},
                     riderData: [
                         { name: 'クウガ', start: '2000-02', end: '2001-01' },
                         { name: 'アギト', start: '2001-02', end: '2002-01' },
@@ -464,12 +455,12 @@
                 }
             },
             methods: {
-                editUser(index) {
-                    this.editingIndex = index;
-                    const user = this.users[index];
+                editUser(userName) {
+                    this.editingIndex = userName;
+                    const user = this.users[userName];
                     const [year, month] = user.birthday.split('-');
                     this.newUser = {
-                        name: user.name,
+                        name: userName,
                         birthYear: year,
                         birthMonth: parseInt(month)
                     };
@@ -477,28 +468,63 @@
                 },
                 
                 saveUser() {
+                    // 入力チェック
                     if (!this.newUser.name || !this.newUser.birthYear || !this.newUser.birthMonth) {
                         alert('すべての項目を入力してください');
                         return;
                     }
                     
+                    // バリデーション
+                    if (this.newUser.name.trim() === '') {
+                        alert('ユーザー名を入力してください');
+                        return;
+                    }
+                    
+                    const year = parseInt(this.newUser.birthYear);
+                    const month = parseInt(this.newUser.birthMonth);
+                    
+                    if (year < 1900 || year > 2090) {
+                        alert('西暦は1900年から2090年の間で入力してください');
+                        return;
+                    }
+                    
+                    if (month < 1 || month > 12) {
+                        alert('月は1から12の間で入力してください');
+                        return;
+                    }
+                    
+                    // 重複チェック
+                    const trimmedName = this.newUser.name.trim();
+                    if (this.editingIndex === -1 && this.users[trimmedName]) {
+                        alert('同じ名前のユーザーが既に存在します');
+                        return;
+                    }
+                    
+                    // 編集時の名前変更で重複チェック
+                    if (this.editingIndex !== -1 && this.editingIndex !== trimmedName && this.users[trimmedName]) {
+                        alert('同じ名前のユーザーが既に存在します');
+                        return;
+                    }
+                    
                     const user = {
-                        name: this.newUser.name,
-                        birthday: this.newUser.birthYear + '-' + String(this.newUser.birthMonth).padStart(2, '0'),
+                        birthday: year + '-' + String(month).padStart(2, '0'),
                         ym: {}
                     };
                     
                     this.generateUserYmData(user);
                     
-                    if (this.editingIndex >= 0) {
-                        // 編集モード
-                        this.users[this.editingIndex] = user;
+                    if (this.editingIndex && this.editingIndex !== -1) {
+                        // 編集モード：古いキーを削除して新しいキーで保存
+                        if (this.editingIndex !== trimmedName) {
+                            delete this.users[this.editingIndex];
+                        }
+                        this.users[trimmedName] = user;
                     } else {
                         // 追加モード
-                        this.users.push(user);
+                        this.users[trimmedName] = user;
                     }
                     
-                    this.saveToCookie();
+                    this.saveToLocalStorage();
                     this.showModal = false;
                     this.editingIndex = -1;
                     this.newUser = { name: '', birthYear: '', birthMonth: '' };
@@ -506,8 +532,8 @@
                 
                 deleteUser() {
                     if (confirm('このユーザーを削除してもよろしいですか？')) {
-                        this.users.splice(this.editingIndex, 1);
-                        this.saveToCookie();
+                        delete this.users[this.editingIndex];
+                        this.saveToLocalStorage();
                         this.showModal = false;
                         this.editingIndex = -1;
                         this.newUser = { name: '', birthYear: '', birthMonth: '' };
@@ -584,35 +610,32 @@
                     }
                 },
                 
-                saveToCookie() {
-                    const userData = this.users.map(user => ({
-                        name: user.name,
-                        birthday: user.birthday
-                    }));
-                    document.cookie = `users=${JSON.stringify(userData)}; max-age=${60*60*24*365}; path=/`;
+                saveToLocalStorage() {
+                    const userData = {};
+                    Object.keys(this.users).forEach(userName => {
+                        userData[userName] = {
+                            birthday: this.users[userName].birthday
+                        };
+                    });
+                    localStorage.setItem('entertainmentTimelineUsers', JSON.stringify(userData));
                 },
                 
-                loadFromCookie() {
-                    const cookies = document.cookie.split(';');
-                    for (let cookie of cookies) {
-                        const [key, value] = cookie.trim().split('=');
-                        if (key === 'users') {
-                            try {
-                                const userData = JSON.parse(decodeURIComponent(value));
-                                userData.forEach(userInfo => {
-                                    const user = {
-                                        name: userInfo.name,
-                                        birthday: userInfo.birthday,
-                                        ym: {}
-                                    };
-                                    this.generateUserYmData(user);
-                                    this.users.push(user);
-                                });
-                            } catch (e) {
-                                console.error('Cookie読み込みエラー:', e);
-                            }
-                            break;
+                loadFromLocalStorage() {
+                    try {
+                        const userData = localStorage.getItem('entertainmentTimelineUsers');
+                        if (userData) {
+                            const users = JSON.parse(userData);
+                            Object.keys(users).forEach(userName => {
+                                const user = {
+                                    birthday: users[userName].birthday,
+                                    ym: {}
+                                };
+                                this.generateUserYmData(user);
+                                this.users[userName] = user;
+                            });
                         }
+                    } catch (e) {
+                        console.error('LocalStorage読み込みエラー:', e);
                     }
                 },
                 
@@ -622,7 +645,7 @@
                 }
             },
             mounted() {
-                this.loadFromCookie();
+                this.loadFromLocalStorage();
             }
         }).mount('#app');
     </script>
