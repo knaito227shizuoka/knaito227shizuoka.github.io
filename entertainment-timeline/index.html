@@ -395,7 +395,7 @@
             
             <div v-if="showModal" class="modal">
                 <div class="modal-content">
-                    <h3>{{ editingIndex >= 0 ? '✏️ ユーザー編集' : '✨ ユーザー追加' }}</h3>
+                    <h3>{{ editingIndex !== -1 ? '✏️ ユーザー編集' : '✨ ユーザー追加' }}</h3>
                     <div class="user-form">
                         <label>ユーザー名</label>
                         <input v-model="newUser.name" type="text" placeholder="名前を入力してください">
@@ -413,8 +413,8 @@
                         ※4月1日生まれの方は3月で登録してください
                     </div>
                     <div class="modal-buttons">
-                        <button @click="saveUser" class="btn-primary">{{ editingIndex >= 0 ? '更新' : '登録' }}</button>
-                        <button v-if="editingIndex >= 0" @click="deleteUser" class="btn-danger">削除</button>
+                        <button @click="saveUser" class="btn-primary">{{ editingIndex !== -1 ? '更新' : '登録' }}</button>
+                        <button v-if="editingIndex !== -1" @click="deleteUser" class="btn-danger">削除</button>
                         <button @click="cancelAddUser" class="btn-secondary">キャンセル</button>
                     </div>
                 </div>
