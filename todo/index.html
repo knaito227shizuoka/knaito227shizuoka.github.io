@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Todo</title>
+    <meta name="description" content="シンプルな静的Todoアプリ" />
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --accent: #22d3ee;
+        --danger: #ef4444;
+        --ok: #10b981;
+        --border: #1f2937;
+        --input: #0b1220;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: radial-gradient(1200px 800px at 80% -20%, #1f2937 0, transparent 60%), var(--bg);
+        color: var(--text);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 16px;
+      }
+      header, footer { padding: 16px; text-align: center; color: var(--muted); }
+      header h1 { margin: 8px 0 0; font-size: 28px; letter-spacing: 0.5px; }
+
+      .wrap {
+        width: 100%;
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 0 16px 24px;
+      }
+
+      .panel {
+        background: linear-gradient(180deg, #0b1220, #0a0f1a);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        overflow: hidden;
+      }
+
+      .add-row {
+        display: flex;
+        gap: 8px;
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(17,24,39,0.35);
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(6px);
+      }
+      .add-row input[type="text"] {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--input);
+        color: var(--text);
+        outline: none;
+      }
+      .add-row input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,0.15); }
+      .add-row button {
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #0f172a, #0b1220);
+        color: var(--text);
+        cursor: pointer;
+      }
+      .add-row button.primary { border-color: rgba(34,211,238,0.4); color: #e6fbff; }
+      .add-row button.primary:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,0.12) inset; }
+
+      .filters {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .filters .tabs { display: flex; gap: 6px; }
+      .filters button.tab {
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #0b1220;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .filters button.tab[aria-pressed="true"] { color: var(--text); border-color: var(--accent); }
+
+      .stats { margin-left: auto; color: var(--muted); font-size: 14px; }
+
+      ul.list { list-style: none; margin: 0; padding: 0; }
+      li.item { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+      li.item:last-child { border-bottom: none; }
+
+      .ck {
+        width: 18px; height: 18px; accent-color: var(--ok);
+      }
+      .label { line-height: 1.3; }
+      .label.done { color: var(--muted); text-decoration: line-through; }
+
+      .actions { display: flex; gap: 6px; }
+      .icon-btn {
+        border: 1px solid var(--border);
+        background: #0b1220;
+        color: var(--muted);
+        padding: 6px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+      .icon-btn.danger:hover { color: #ffe5e5; border-color: var(--danger); }
+
+      .empty { text-align: center; color: var(--muted); padding: 24px; }
+
+      .footer-actions { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
+
+      .visually-hidden {
+        position: absolute !important;
+        height: 1px; width: 1px;
+        overflow: hidden; clip: rect(1px, 1px, 1px, 1px);
+        white-space: nowrap; border: 0; padding: 0; margin: -1px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>静的シングルファイル版</div>
+      <h1>Todo</h1>
+    </header>
+
+    <main class="wrap">
+      <section class="panel" aria-labelledby="todo-title">
+        <h2 id="todo-title" class="visually-hidden">Todo リスト</h2>
+
+        <form id="add-form" class="add-row" autocomplete="off">
+          <label for="new-text" class="visually-hidden">新しいタスク</label>
+          <input id="new-text" name="text" type="text" placeholder="やることを入力して Enter" required />
+          <button type="submit" class="primary" aria-label="追加">追加</button>
+        </form>
+
+        <div class="filters" role="toolbar" aria-label="フィルター">
+          <div class="tabs" id="filters">
+            <button type="button" class="tab" data-filter="all" aria-pressed="true">すべて</button>
+            <button type="button" class="tab" data-filter="active" aria-pressed="false">未完了</button>
+            <button type="button" class="tab" data-filter="completed" aria-pressed="false">完了</button>
+          </div>
+          <div class="stats"><span id="left-count">0</span> 件のタスク</div>
+        </div>
+
+        <ul id="list" class="list" aria-live="polite"></ul>
+
+        <div class="footer-actions">
+          <button id="clear-done" class="icon-btn danger" type="button" aria-label="完了をすべて削除">完了をすべて削除</button>
+          <button id="export-json" class="icon-btn" type="button">エクスポート</button>
+          <button id="import-json" class="icon-btn" type="button">インポート</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <small>ローカル保存（localStorage）で動作。通信なし。</small>
+    </footer>
+
+    <script>
+      (function () {
+        const LS_KEY = 'todo.items.v1';
+
+        /** @typedef {{id:string, text:string, done:boolean, created:number, updated:number}} Todo */
+
+        /** @type {Todo[]} */
+        let items = load();
+        /** @type {'all'|'active'|'completed'} */
+        let filter = 'all';
+
+        const $list = document.getElementById('list');
+        const $form = document.getElementById('add-form');
+        const $input = document.getElementById('new-text');
+        const $left = document.getElementById('left-count');
+        const $filters = document.getElementById('filters');
+        const $clear = document.getElementById('clear-done');
+        const $export = document.getElementById('export-json');
+        const $import = document.getElementById('import-json');
+
+        function uid() {
+          if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+          return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+        }
+
+        function save() {
+          try { localStorage.setItem(LS_KEY, JSON.stringify(items)); } catch {}
+        }
+
+        function load() {
+          try {
+            const raw = localStorage.getItem(LS_KEY);
+            return raw ? JSON.parse(raw) : [];
+          } catch { return []; }
+        }
+
+        function setFilter(next) {
+          filter = next;
+          for (const btn of /** @type {NodeListOf<HTMLButtonElement>} */ ($filters.querySelectorAll('.tab'))) {
+            btn.setAttribute('aria-pressed', String(btn.dataset.filter === filter));
+          }
+          render();
+        }
+
+        function visible(list) {
+          switch (filter) {
+            case 'active': return list.filter(i => !i.done);
+            case 'completed': return list.filter(i => i.done);
+            default: return list;
+          }
+        }
+
+        function add(text) {
+          const now = Date.now();
+          items.unshift({ id: uid(), text: text.trim(), done: false, created: now, updated: now });
+          save();
+          render();
+        }
+
+        function toggle(id) {
+          const it = items.find(i => i.id === id);
+          if (!it) return;
+          it.done = !it.done;
+          it.updated = Date.now();
+          save();
+          render();
+        }
+
+        function remove(id) {
+          items = items.filter(i => i.id !== id);
+          save();
+          render();
+        }
+
+        function edit(id, text) {
+          const it = items.find(i => i.id === id);
+          if (!it) return;
+          it.text = text.trim();
+          it.updated = Date.now();
+          save();
+          render();
+        }
+
+        function clearDone() {
+          items = items.filter(i => !i.done);
+          save();
+          render();
+        }
+
+        function updateCount() {
+          const left = items.filter(i => !i.done).length;
+          $left.textContent = String(left);
+        }
+
+        function render() {
+          updateCount();
+          const v = visible(items);
+          if (v.length === 0) {
+            $list.innerHTML = '<li class="empty">タスクはありません</li>';
+            return;
+          }
+          $list.innerHTML = '';
+          for (const it of v) {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.dataset.id = it.id;
+
+            const ck = document.createElement('input');
+            ck.type = 'checkbox';
+            ck.className = 'ck';
+            ck.checked = it.done;
+            ck.setAttribute('aria-label', '完了');
+            ck.addEventListener('change', () => toggle(it.id));
+            li.appendChild(ck);
+
+            const label = document.createElement('div');
+            label.className = 'label' + (it.done ? ' done' : '');
+            label.textContent = it.text || '(無題)';
+            label.title = 'ダブルクリックで編集';
+            label.addEventListener('dblclick', () => beginEdit(li, it));
+            li.appendChild(label);
+
+            const actions = document.createElement('div');
+            actions.className = 'actions';
+
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'icon-btn';
+            editBtn.textContent = '編集';
+            editBtn.addEventListener('click', () => beginEdit(li, it));
+            actions.appendChild(editBtn);
+
+            const del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'icon-btn danger';
+            del.textContent = '削除';
+            del.addEventListener('click', () => remove(it.id));
+            actions.appendChild(del);
+
+            li.appendChild(actions);
+            $list.appendChild(li);
+          }
+        }
+
+        function beginEdit(li, it) {
+          // Prevent duplicate editors
+          if (li.querySelector('input[type="text"].edit')) return;
+          const label = li.querySelector('.label');
+          if (!label) return;
+          const start = it.text;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = start;
+          input.className = 'edit';
+          input.style.width = '100%';
+          input.style.padding = '8px 10px';
+          input.style.borderRadius = '8px';
+          input.style.border = '1px solid var(--border)';
+          input.style.background = 'var(--input)';
+          input.style.color = 'var(--text)';
+          const commit = () => {
+            const next = input.value.trim();
+            if (!next) {
+              // 空なら削除するか確認
+              if (confirm('空のタスクです。削除しますか？')) remove(it.id);
+              else cancel();
+            } else if (next !== start) {
+              edit(it.id, next);
+            } else {
+              cancel();
+            }
+          };
+          const cancel = () => {
+            label.style.display = '';
+            input.remove();
+          };
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') cancel();
+          });
+          input.addEventListener('blur', commit);
+          label.style.display = 'none';
+          label.after(input);
+          input.focus();
+          input.select();
+        }
+
+        $form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const text = $input.value.trim();
+          if (!text) return;
+          add(text);
+          $input.value = '';
+          $input.focus();
+        });
+
+        $filters.addEventListener('click', (e) => {
+          const btn = /** @type {HTMLElement} */ (e.target);
+          if (btn && btn.matches('button.tab')) setFilter(btn.dataset.filter);
+        });
+
+        $clear.addEventListener('click', () => {
+          if (items.some(i => i.done)) {
+            if (confirm('完了済みのタスクをすべて削除しますか？')) clearDone();
+          }
+        });
+
+        $export.addEventListener('click', () => {
+          const data = JSON.stringify(items, null, 2);
+          const blob = new Blob([data], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'todo-export.json';
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(url);
+        });
+
+        $import.addEventListener('click', async () => {
+          const picker = document.createElement('input');
+          picker.type = 'file'; picker.accept = 'application/json,.json';
+          picker.addEventListener('change', () => {
+            const file = picker.files && picker.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const parsed = JSON.parse(String(reader.result));
+                if (!Array.isArray(parsed)) throw new Error('配列ではありません');
+                // 軽いバリデーション
+                items = parsed.map((x) => ({
+                  id: String(x.id || uid()),
+                  text: String(x.text || ''),
+                  done: Boolean(x.done),
+                  created: Number(x.created || Date.now()),
+                  updated: Number(x.updated || Date.now()),
+                }));
+                save();
+                render();
+              } catch (err) {
+                alert('読み込みに失敗しました: ' + err);
+              }
+            };
+            reader.readAsText(file);
+          });
+          picker.click();
+        });
+
+        // 初期描画
+        render();
+      })();
+    </script>
+  </body>
+  </html>
+
