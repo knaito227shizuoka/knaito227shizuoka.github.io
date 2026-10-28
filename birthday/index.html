@@ -129,6 +129,7 @@
             font-size: 16px;
             padding: 2px 8px 3px 8px;
             border-radius: 9px;
+            white-space: nowrap;
         }
 
         .family-row {
@@ -392,7 +393,7 @@
                             <div class="family-info">
                                 {{ family.birthday }} <span class="zodiac-sign">{{ family.zodiacSign }}</span> {{ family.age }}歳 <span class="zodiac-sign">{{ family.constellationSign }}</span>
                             </div>
-                            <button class="btn btn-danger" @click="deleteFamily(family.name)">削<br>除</button>
+                            <button class="btn btn-danger" @click="deleteFamily(family.name)">削除</button>
                         </div>
                     </div>
                 </div>
