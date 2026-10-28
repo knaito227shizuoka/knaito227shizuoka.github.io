@@ -392,7 +392,7 @@
                             <div class="family-info">
                                 {{ family.birthday }} <span class="zodiac-sign">{{ family.zodiacSign }}</span> {{ family.age }}歳 <span class="zodiac-sign">{{ family.constellationSign }}</span>
                             </div>
-                            <button class="btn btn-danger" @click="deleteFamily(family.name)">削除</button>
+                            <button class="btn btn-danger" @click="deleteFamily(family.name)">削<br>除</button>
                         </div>
                     </div>
                 </div>
@@ -626,6 +626,7 @@
                 },
                 daysUntilBirthday(birthday) {
                     const today = new Date();
+                    today.setHours(0, 0, 0, 0);
                     const birthDate = new Date(birthday);
                     const thisYear = today.getFullYear();
                     
@@ -642,7 +643,7 @@
                 },
                 getCountdownText(daysUntil) {
                     if (daysUntil === 0) {
-                        return '🎉 今日が誕生日です！';
+                        return '🎉今日が誕生日！';
                     } else if (daysUntil === 1) {
                         return '🎂 明日が誕生日です！';
                     } else {

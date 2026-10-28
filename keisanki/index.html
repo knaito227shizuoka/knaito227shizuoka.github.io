@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>電卓（静的）</title>
+    <meta name="description" content="シンプルで軽量な静的電卓。JavaScriptのみで動作。" />
+    <style>
+      :root {
+        --bg: #0f1221;
+        --panel: #171a2c;
+        --key: #232844;
+        --key-acc: #2f365f;
+        --key-op: #3a7afe;
+        --text: #e9ecf1;
+        --muted: #9aa3b2;
+        --danger: #ff5c5c;
+        --ok: #34d399;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 10% 0%, #121530 0%, var(--bg) 45%, #0b0e1b 100%);
+        color: var(--text);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+      }
+
+      .wrap {
+        width: min(100%, 420px);
+      }
+
+      .title {
+        margin: 0 0 12px;
+        font-size: 18px;
+        color: var(--muted);
+        letter-spacing: .02em;
+        text-align: center;
+      }
+
+      .calc {
+        background: color-mix(in oklab, var(--panel) 92%, black 8%);
+        border: 1px solid color-mix(in oklab, var(--panel) 70%, #000 30%);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+      }
+
+      .display {
+        height: 92px;
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: grid;
+        align-content: center;
+        gap: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.06);
+      }
+
+      .expr {
+        font-size: 14px;
+        color: var(--muted);
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-height: 18px;
+      }
+
+      .value {
+        font-size: clamp(24px, 5.4vw, 36px);
+        line-height: 1.15;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: .02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .keys {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      button.key {
+        -webkit-tap-highlight-color: transparent;
+        appearance: none;
+        border: 0;
+        border-radius: 12px;
+        padding: 16px 12px;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--key);
+        box-shadow: 0 6px 16px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+        cursor: pointer;
+        transition: transform .05s ease, filter .15s ease, background .2s ease;
+      }
+      button.key:active { transform: translateY(1px) scale(.995); }
+      button.key.op { background: color-mix(in oklab, var(--key-op) 70%, #2b52e5 30%); }
+      button.key.util { background: var(--key-acc); color: #e9f0ff; }
+      button.key.danger { background: color-mix(in oklab, var(--danger) 65%, #b91c1c 35%); }
+      button.key.ok { background: color-mix(in oklab, var(--ok) 75%, #059669 25%); }
+
+      .span-2 { grid-column: span 2; }
+
+      .help {
+        margin-top: 10px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .help kbd {
+        background: #23263b;
+        border: 1px solid rgba(255,255,255,.08);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Noto Sans Mono", monospace;
+        font-size: 11px;
+      }
+      a.home {
+        display: inline-block;
+        margin-top: 14px;
+        color: #93c5fd;
+        text-decoration: none;
+      }
+      a.home:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <p class="title">静的電卓</p>
+      <section class="calc" role="application" aria-label="電卓">
+        <div class="display" aria-live="polite">
+          <div id="expr" class="expr"></div>
+          <div id="value" class="value">0</div>
+        </div>
+
+        <div class="keys" id="keys">
+          <button class="key util danger" data-action="clear-all" aria-label="全消去">AC</button>
+          <button class="key util" data-action="backspace" aria-label="一文字削除">DEL</button>
+          <button class="key util" data-input="%" aria-label="パーセント">%</button>
+          <button class="key op" data-input="÷" aria-label="割り算">÷</button>
+
+          <button class="key" data-input="7">7</button>
+          <button class="key" data-input="8">8</button>
+          <button class="key" data-input="9">9</button>
+          <button class="key op" data-input="×" aria-label="掛け算">×</button>
+
+          <button class="key" data-input="4">4</button>
+          <button class="key" data-input="5">5</button>
+          <button class="key" data-input="6">6</button>
+          <button class="key op" data-input="-" aria-label="引き算">−</button>
+
+          <button class="key" data-input="1">1</button>
+          <button class="key" data-input="2">2</button>
+          <button class="key" data-input="3">3</button>
+          <button class="key op" data-input="+" aria-label="足し算">＋</button>
+
+          <button class="key span-2" data-input="0">0</button>
+          <button class="key" data-input="," aria-label="小数点">.</button>
+          <button class="key ok" data-action="equals" aria-label="イコール">＝</button>
+        </div>
+
+        <p class="help">
+          キーボード: <kbd>0-9</kbd> <kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd> <kbd>%</kbd>
+          <kbd>.</kbd> <kbd>Enter</kbd> <kbd>Backspace</kbd> <kbd>Esc</kbd>
+        </p>
+        <a class="home" href="../">← トップへ戻る</a>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const exprEl = document.getElementById('expr');
+        const valueEl = document.getElementById('value');
+        const keys = document.getElementById('keys');
+
+        let expr = '';
+        let justEvaluated = false;
+
+        const OP = new Set(['+', '-', '×', '÷']);
+
+        function setExpr(next) {
+          expr = next;
+          exprEl.textContent = expr;
+        }
+
+        function setValue(text) {
+          valueEl.textContent = text;
+        }
+
+        function isOperator(ch) { return OP.has(ch); }
+
+        function append(ch) {
+          if (justEvaluated && /[0-9.]/.test(ch)) {
+            // Start new expression when a number is typed after equals
+            setExpr('');
+            justEvaluated = false;
+          } else if (justEvaluated && isOperator(ch)) {
+            // Continue with result if operator is pressed after equals
+            justEvaluated = false;
+          }
+
+          // Normalize decimal: allow only one dot in the current number chunk
+          if (ch === ',' || ch === '.') ch = '.';
+
+          const last = expr.slice(-1);
+
+          // Prevent leading operator
+          if (!expr && isOperator(ch)) return;
+
+          // Avoid duplicate operators (replace last one)
+          if (isOperator(ch) && isOperator(last)) {
+            setExpr(expr.slice(0, -1) + ch);
+            return;
+          }
+
+          // Limit decimal points within current number
+          if (ch === '.') {
+            const m = expr.match(/(\d+\.?\d*)$/);
+            if (m && m[0].includes('.')) return;
+            if (!expr || isOperator(last)) {
+              // prepend 0 when starting with dot or after operator
+              ch = '0.';
+            }
+          }
+
+          // Percent can only follow a number
+          if (ch === '%') {
+            if (!/\d$/.test(expr)) return;
+          }
+
+          // Trim to reasonable length
+          if ((expr + ch).length > 64) return;
+
+          setExpr(expr + ch);
+        }
+
+        function backspace() {
+          if (!expr) return;
+          setExpr(expr.slice(0, -1));
+          justEvaluated = false;
+        }
+
+        function clearAll() {
+          setExpr('');
+          setValue('0');
+          justEvaluated = false;
+        }
+
+        function toJSExpression(s) {
+          let js = s.replace(/×/g, '*').replace(/÷/g, '/');
+          // Replace n% => (n/100)
+          js = js.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+          // Remove trailing operator/dot
+          js = js.replace(/[+\-*/.]$/,'');
+          return js;
+        }
+
+        function formatResult(num) {
+          if (!Number.isFinite(num)) return 'Error';
+          const str = Math.abs(num) >= 1e12 || (Math.abs(num) > 0 && Math.abs(num) < 1e-6)
+            ? num.toExponential(8)
+            : String(num);
+          // Trim trailing zeros for decimals
+          return str.replace(/\.([0-9]*?)0+(e|$)/, '.$1$2').replace(/\.$/, '');
+        }
+
+        function evaluate() {
+          if (!expr) return;
+          const js = toJSExpression(expr);
+          try {
+            // Since input is only from controlled buttons/keyboard and sanitized, this is acceptable
+            const value = Function(`"use strict"; return (${js})`)();
+            const out = formatResult(value);
+            setValue(out);
+            setExpr(expr + ' =');
+            justEvaluated = true;
+          } catch (e) {
+            setValue('Error');
+            justEvaluated = true;
+          }
+        }
+
+        keys.addEventListener('click', (e) => {
+          const btn = e.target.closest('button.key');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const input = btn.getAttribute('data-input');
+
+          if (action === 'clear-all') return clearAll();
+          if (action === 'backspace') return backspace();
+          if (action === 'equals') return evaluate();
+          if (input) return append(input);
+        });
+
+        window.addEventListener('keydown', (e) => {
+          const k = e.key;
+          if (/^[0-9]$/.test(k)) { append(k); return; }
+          if (k === '.' || k === ',') { append('.'); return; }
+          if (k === '+' || k === '-') { append(k); return; }
+          if (k === '*') { append('×'); return; }
+          if (k === '/') { append('÷'); return; }
+          if (k === '%') { append('%'); return; }
+          if (k === 'Enter' || k === '=') { e.preventDefault(); evaluate(); return; }
+          if (k === 'Backspace') { backspace(); return; }
+          if (k === 'Escape') { clearAll(); return; }
+        });
+      })();
+    </script>
+  </body>
+  </html>
+
