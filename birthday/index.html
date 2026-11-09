@@ -4,6 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>誕生日記録簿</title>
+    <script>
+        // 新アプリ「誕生日フォルダ」へ移動する。登録データは旧形式のGETパラメータで引き継ぐ
+        (function () {
+            var NEW_URL = "https://birthday-rec.pages.dev/";
+            var params = new URLSearchParams(location.search);
+            if (!params.has("name1")) {
+                try {
+                    var data = JSON.parse(localStorage.getItem("familyBirthdayData") || "{}");
+                    var i = 1;
+                    Object.keys(data).forEach(function (name) {
+                        if (data[name] && data[name].birthday) {
+                            params.set("name" + i, name);
+                            params.set("birthday" + i, data[name].birthday);
+                            i++;
+                        }
+                    });
+                } catch (e) {
+                    // 読み込めなければデータなしで移動する
+                }
+            }
+            var query = params.toString();
+            location.replace(NEW_URL + (query ? "?" + query : ""));
+        })();
+    </script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         * {
