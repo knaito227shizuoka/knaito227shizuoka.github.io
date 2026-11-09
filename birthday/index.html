@@ -95,8 +95,9 @@
                         // 読み込めなければデータなしで移動する
                     }
                 }
-                var query = params.toString();
-                return NEW_URL + (query ? "?" + query : "");
+                // LINEのアプリ内ブラウザで開いていても、新アプリは外のブラウザで開く（LINEの公式機能）
+                params.set("openExternalBrowser", "1");
+                return NEW_URL + "?" + params.toString();
             }
 
             var ok = document.getElementById("move-ok");
